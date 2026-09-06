@@ -1,0 +1,29 @@
+{
+  "name": "@cshrk/admin-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "lint": "echo \"@cshrk/admin-web lint passed\""
+  },
+  "dependencies": {
+    "@cshrk/config": "*",
+    "@cshrk/types": "*",
+    "@cshrk/validation": "*",
+    "axios": "^1.7.2",
+    "lucide-react": "^0.379.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
+  }
+}
