@@ -1,0 +1,33 @@
+{
+  "name": "cshrk-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CSHRK — Cooperative Labour & Service Marketplace Monorepo",
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "type-check": "npm run type-check --workspaces --if-present",
+    "start:api": "npm run start:dev --workspace=@cshrk/api",
+    "start:ai": "cd services/ai && python -m uvicorn app.main:app --reload --port 8000",
+    "start:admin": "npm run dev --workspace=@cshrk/admin-web",
+    "start:customer": "npm run start --workspace=@cshrk/customer-mobile",
+    "start:worker": "npm run start --workspace=@cshrk/worker-mobile",
+    "docker:up": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down"
+  },
+  "keywords": [
+    "cooperative",
+    "labour",
+    "marketplace",
+    "workforce",
+    "federation"
+  ],
+  "author": "CSHRK Core Engineering Team",
+  "license": "UNLICENSED"
+}
