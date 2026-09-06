@@ -1,0 +1,52 @@
+name: CSHRK CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  validate-foundation:
+    name: Lint, Typecheck, Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (v20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Setup Python (3.11)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Monorepo Dependencies
+        run: npm ci
+
+      - name: Install AI Service Dependencies
+        run: |
+          cd services/ai
+          pip install -r requirements.txt
+
+      - name: Run Monorepo Lint Checks
+        run: npm run lint
+
+      - name: Run TypeScript Type Checks
+        run: npm run type-check
+
+      - name: Run Backend Unit Tests
+        run: npm run test --workspace=@cshrk/api
+
+      - name: Run AI Service Tests
+        run: |
+          cd services/ai
+          pytest
+
+      - name: Build Monorepo Packages and Apps
+        run: npm run build
