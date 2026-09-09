@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary": "#ffffff", "on-tertiary-container": "#5fcdbf", "on-surface": "#0b1c30", "primary-container": "#1e40af", "tertiary-fixed-dim": "#6bd8cb", "tertiary-container": "#00554e", "surface-tint": "#3755c3", "surface-container": "#e5eeff", "on-tertiary": "#ffffff", "surface-container-low": "#eff4ff", "on-tertiary-fixed-variant": "#005049", "primary": "#00288e", "secondary-container": "#dae2fd", "secondary": "#565e74", "on-tertiary-fixed": "#00201d", "on-primary-fixed": "#001453", "on-error-container": "#93000a", "outline": "#757684", "surface-container-high": "#dce9ff", "on-secondary-container": "#5c647a", "error-container": "#ffdad6", "secondary-fixed": "#dae2fd", "on-secondary-fixed-variant": "#3f465c", "surface-container-highest": "#d3e4fe", "inverse-primary": "#b8c4ff", "outline-variant": "#c4c5d5", "surface": "#f8f9ff", "surface-variant": "#d3e4fe", "tertiary": "#003c36", "surface-dim": "#cbdbf5", "secondary-fixed-dim": "#bec6e0", "primary-fixed": "#dde1ff", "on-background": "#0b1c30", "surface-container-lowest": "#ffffff", "on-secondary": "#ffffff", "on-primary-container": "#a8b8ff", "background": "#f8f9ff", "on-surface-variant": "#444653", "inverse-on-surface": "#eaf1ff", "surface-bright": "#f8f9ff", "on-secondary-fixed": "#131b2e", "on-primary-fixed-variant": "#173bab", "error": "#ba1a1a", "inverse-surface": "#213145", "tertiary-fixed": "#89f5e7", "primary-fixed-dim": "#b8c4ff", "on-error": "#ffffff" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-lg": "1.5rem", "space-sm": "0.75rem", "sidebar-collapsed-width": "4rem", "space-2xs": "0.25rem", "space-2xl": "3rem", "space-md": "1rem", "space-xs": "0.5rem", "space-xl": "2rem", "sidebar-width": "16rem", "gutter": "1rem" }, "fontFamily": { "body-lg": ["Inter"], "code-sm": ["Inter"], "headline-sm": ["Inter"], "body-sm": ["Inter"], "headline-lg": ["Inter"], "body-md": ["Inter"], "headline-md": ["Inter"], "label-md": ["Inter"], "display-lg": ["Inter"], "display-lg-mobile": ["Inter"], "label-sm": ["Inter"] }, "fontSize": { "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }], "code-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }], "headline-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "600" }], "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0.005em", "fontWeight": "400" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }], "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-md": ["13px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }], "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "display-lg-mobile": ["26px", { "lineHeight": "34px", "letterSpacing": "-0.015em", "fontWeight": "700" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.03em", "fontWeight": "600" }] } } } }</script></head><body class="bg-surface font-body-md text-body-md text-on-surface flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-space-md flex items-center justify-between"><div class="flex items-center gap-space-xs"><img alt="Workforce Core Emblem" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VUwMti3CeNKpL31Nd_1cEj7zP0x6hG7t_CWKUagp4hFyqVpy9mHsnszMJJarMy4fygfMQ8nUY3EUty0bdcEUO1mLnLu6-3C_dZxlKvy6Tl61q3YsjfoeDd-rPQyNhU5KA82B0LqFRI8nRk3Jrt0MSjDcB58QhCOhB_qCCD9vLogqxxY6irpbCpJzPDMtqF4RCp7N6wEccaMIkqhq6QYlhK2AoHPFI7PCC1j4aiEjw3jyrW7SPHoRn9ycyS"/><div class="flex flex-col min-w-0"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider truncate">Workforce Core</span><button class="flex items-center gap-space-2xs text-left min-w-0 max-w-[150px] group"><span class="font-headline-sm text-headline-sm text-on-surface truncate group-active:text-primary">Apex Global Cooperative Alliance</span><span class="material-symbols-outlined text-[16px] text-on-surface-variant shrink-0">expand_more</span></button></div></div><div class="flex items-center gap-space-xs shrink-0"><button class="w-11 h-11 flex items-center justify-center rounded-xl text-on-surface-variant active:bg-surface-container active:text-on-surface"><span class="material-symbols-outlined text-[20px]">search</span></button><button class="relative w-11 h-11 flex items-center justify-center rounded-xl text-on-surface-variant active:bg-surface-container active:text-on-surface"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-2 right-2 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-error font-label-sm text-[10px] text-on-error">3</span></button><button class="w-11 h-11 flex items-center justify-center rounded-full"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCijwi6iTU5gFUgAEgV8TlD8H7vQriHK6vIDO2F1ylkmaKQl_RkI8b115XFoca1sOBKKXknjsyTLYwRmMmuL45M0dZEWMyP9DhMyZtbgxoTbRUm0QWoxX68PybdcqZYYPbHjSR_5lkBDwct02Rdv2hCNiRkVa0PRIUoyP7BCIKGrm5B1mV7KazX6ePePzFJhlFkkCBPsSUiLN6I1DqqYeFJXOOeAeBvUrbsuafgzMvZms8JfpjAWrpyQA"/></button></div></div></header><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full px-space-md py-space-sm space-y-space-md">
+<!-- Header & Primary Action -->
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex flex-col">
+<span class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Workers</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 leading-snug">
+        Manage worker profiles, skills, certifications, and cooperative affiliations.
+      </p>
+</div>
+<button class="shrink-0 flex items-center gap-space-2xs bg-primary text-on-primary font-label-md text-label-md px-space-sm py-2 rounded-xl shadow-sm active:opacity-90 transition-all">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+<span>Add Worker</span>
+</button>
+</div>
+<!-- Search & Filter Controls -->
+<div class="flex flex-col space-y-space-xs">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+<input class="w-full h-11 pl-10 pr-10 bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant/70 font-body-md text-body-md rounded-xl shadow-sm focus:outline-none focus:bg-surface-container-low transition-colors" id="worker-search" placeholder="Search worker name, ID, phone, or email..." type="text"/>
+<button class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant p-1 active:scale-95" id="clear-search-btn">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<!-- Quick filter triggers & Clear state toggle -->
+<div class="flex items-center justify-between gap-space-xs pt-1">
+<div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+<button class="flex items-center gap-1 bg-primary text-on-primary font-label-sm text-label-sm px-2.5 py-1.5 rounded-lg shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[15px]">tune</span>
+<span>Filters (2)</span>
+</button>
+<button class="flex items-center gap-1 bg-surface-container-low text-on-surface font-label-sm text-label-sm px-2.5 py-1.5 rounded-lg shrink-0 active:bg-surface-container">
+<span>Status</span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">expand_more</span>
+</button>
+<button class="flex items-center gap-1 bg-surface-container-low text-on-surface font-label-sm text-label-sm px-2.5 py-1.5 rounded-lg shrink-0 active:bg-surface-container">
+<span>Worker Type</span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">expand_more</span>
+</button>
+<button class="flex items-center gap-1 bg-surface-container-low text-on-surface font-label-sm text-label-sm px-2.5 py-1.5 rounded-lg shrink-0 active:bg-surface-container">
+<span>Skill</span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">expand_more</span>
+</button>
+<button class="flex items-center gap-1 bg-surface-container-low text-on-surface font-label-sm text-label-sm px-2.5 py-1.5 rounded-lg shrink-0 active:bg-surface-container">
+<span>Cooperative</span>
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant">expand_more</span>
+</button>
+</div>
+<button class="shrink-0 text-primary font-label-sm text-label-sm px-1.5 py-1 active:underline" id="reset-filters">
+        Clear Filters
+      </button>
+</div>
+</div>
+<!-- Status Segmented Filter Chips -->
+<div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+<button class="status-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm bg-primary text-on-primary shadow-sm shrink-0" data-status="all">
+<span>All</span>
+<span class="bg-on-primary/20 text-on-primary px-1.5 py-0.2 rounded-full text-[10px]">2,845</span>
+</button>
+<button class="status-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant hover:text-on-surface shrink-0" data-status="active">
+<span>Active</span>
+<span class="bg-surface-container text-on-surface-variant px-1.5 py-0.2 rounded-full text-[10px]">2,410</span>
+</button>
+<button class="status-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant hover:text-on-surface shrink-0" data-status="onboarding">
+<span>Onboarding</span>
+<span class="bg-surface-container text-on-surface-variant px-1.5 py-0.2 rounded-full text-[10px]">150</span>
+</button>
+<button class="status-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant hover:text-on-surface shrink-0" data-status="expiring">
+<span>Expiring Certs</span>
+<span class="bg-error-container text-on-error-container font-semibold px-1.5 py-0.2 rounded-full text-[10px]">28</span>
+</button>
+<button class="status-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant hover:text-on-surface shrink-0" data-status="inactive">
+<span>Inactive</span>
+<span class="bg-surface-container text-on-surface-variant px-1.5 py-0.2 rounded-full text-[10px]">285</span>
+</button>
+</div>
+<!-- Worker Cards List -->
+<div class="flex flex-col space-y-3.5" id="worker-list">
+<!-- Worker Card 1 -->
+<div class="worker-card flex flex-col bg-surface-container-lowest rounded-xl p-4 shadow-sm space-y-3 transition-transform active:scale-[0.99]" data-id="WKR-8042" data-name="Carlos Mendez">
+<!-- Top Profile Row -->
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-center gap-3 min-w-0">
+<img class="w-12 h-12 rounded-xl object-cover bg-surface-container shrink-0" data-alt="Close up professional portrait of Carlos Mendez, an agronomist with warm friendly expression, wearing a sturdy work vest outdoors against morning agricultural crop fields, natural sunlight, crisp details." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4FxRHUCoRQzViwAIsIb4RxEcqQIR42mU-FjamgAVECgEqmh_tvgE0myGwR7WX9oF1OqI15ugqx-0F3jclMdyaQJEHdE4FGV54Io2COGoTDDUiN_KYuuPJcFWFI3DUcz_L06Ga5UGoaodaXASg29aasQGmgSjj0WGWDa32aZj9scv5woIGfvLKEjYNiMClQiqnwmRcO6SPTtAT_iq-jiBEK9YdcN6PMc67wRyM7afaKThvRAmu5WSg-A"/>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Carlos Mendez</span>
+<span class="font-code-sm text-[11px] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">WKR-8042</span>
+</div>
+<span class="font-body-sm text-body-sm text-primary font-medium truncate mt-0.5">Senior Agronomist & Machine Specialist</span>
+<div class="flex items-center gap-1 text-on-surface-variant text-[11px] font-label-sm mt-0.5">
+<span class="material-symbols-outlined text-[13px] text-secondary">domain</span>
+<span class="truncate">Apex Agro Union · Since 2021</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-end gap-1 shrink-0">
+<span class="inline-flex items-center px-2 py-0.5 rounded font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-semibold">
+            Active · FT
+          </span>
+</div>
+</div>
+<!-- Skills Matrix Tags -->
+<div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+<span class="inline-flex items-center gap-1 font-label-sm text-[11px] bg-surface-container-low text-on-surface px-2 py-0.5 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+          Tractor Operations <strong class="text-primary font-semibold">Expert</strong>
+</span>
+<span class="inline-flex items-center gap-1 font-label-sm text-[11px] bg-surface-container-low text-on-surface px-2 py-0.5 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span>
+          Soil Testing <strong class="text-tertiary font-semibold">Adv</strong>
+</span>
+<span class="font-label-sm text-[10px] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">+2 more</span>
+</div>
+<!-- Certification Status Strip -->
+<div class="flex items-center justify-between bg-surface-container-low px-2.5 py-1.5 rounded-lg text-on-surface">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="material-symbols-outlined text-[16px] text-tertiary-container shrink-0">verified</span>
+<span class="font-label-sm text-label-sm truncate">OSHA-30 & Agro-Tech II</span>
+</div>
+<span class="shrink-0 font-label-sm text-[10px] px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-semibold">Valid</span>
+</div>
+<!-- Quick Contact Info -->
+<div class="flex items-center justify-between text-on-surface-variant font-body-sm text-[12px] pt-1">
+<div class="flex items-center gap-1 truncate">
+<span class="material-symbols-outlined text-[14px]">mail</span>
+<span class="truncate">carlos.m@apexagro.org</span>
+</div>
+<div class="flex items-center gap-1 shrink-0">
+<span class="material-symbols-outlined text-[14px]">call</span>
+<span>+1 (555) 382-9104</span>
+</div>
+</div>
+<!-- Card Actions -->
+<div class="flex items-center gap-2 pt-1">
+<button class="flex-1 bg-surface-container-high text-primary font-label-md text-label-md py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 active:bg-primary active:text-on-primary transition-colors">
+<span>View Profile</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+<button aria-label="More actions" class="w-10 h-9 flex items-center justify-center bg-surface-container-low text-on-surface-variant rounded-xl active:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Worker Card 2 -->
+<div class="worker-card flex flex-col bg-surface-container-lowest rounded-xl p-4 shadow-sm space-y-3 transition-transform active:scale-[0.99]" data-id="WKR-9120" data-name="Elena Rostova">
+<!-- Top Profile Row -->
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-center gap-3 min-w-0">
+<img class="w-12 h-12 rounded-xl object-cover bg-surface-container shrink-0" data-alt="Professional candid profile photo of Elena Rostova, female master welder with safety glasses on head and navy industrial uniform, clean warm industrial workshop lighting in background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6VknMedIA5QBxPywl_xHXEHEuWEe4nEBkPyM_QUnwzcTETq39unzUkL8ELjd_MSFiZPEpmNmAAfKXZAfZb8VUw8G58TaaHyUJWFUr1PyXxQZnXCT2qMSgpdaefmyJ6FH6GCk0zcAKV1L8-uZ5vTzuXEL4P0oo3N5oBAAdIMZWPBO1Emq065jE37_aNMAUOM9lLbvMIuhe2Sb8uA0kAFjhzlJoCD4QRKkAtb8uoEsAjLJrsJNnU9zWZQ"/>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Elena Rostova</span>
+<span class="font-code-sm text-[11px] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">WKR-9120</span>
+</div>
+<span class="font-body-sm text-body-sm text-primary font-medium truncate mt-0.5">Lead Industrial Welder & QA</span>
+<div class="flex items-center gap-1 text-on-surface-variant text-[11px] font-label-sm mt-0.5">
+<span class="material-symbols-outlined text-[13px] text-secondary">domain</span>
+<span class="truncate">Midland Fabrication Guild · Since 2019</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-end gap-1 shrink-0">
+<span class="inline-flex items-center px-2 py-0.5 rounded font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-semibold">
+            Active · FT
+          </span>
+</div>
+</div>
+<!-- Skills Matrix Tags -->
+<div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+<span class="inline-flex items-center gap-1 font-label-sm text-[11px] bg-surface-container-low text-on-surface px-2 py-0.5 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+          Robotic MIG Welding <strong class="text-primary font-semibold">Expert</strong>
+</span>
+<span class="inline-flex items-center gap-1 font-label-sm text-[11px] bg-surface-container-low text-on-surface px-2 py-0.5 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span>
+          NDT Level II <strong class="text-tertiary font-semibold">Adv</strong>
+</span>
+</div>
+<!-- Certification Status Strip -->
+<div class="flex items-center justify-between bg-surface-container-low px-2.5 py-1.5 rounded-lg text-on-surface">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="material-symbols-outlined text-[16px] text-tertiary-container shrink-0">workspace_premium</span>
+<span class="font-label-sm text-label-sm truncate">AWS D1.1 Structural Welding</span>
+</div>
+<span class="shrink-0 font-label-sm text-[10px] px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-semibold">Valid</span>
+</div>
+<!-- Card Actions -->
+<div class="flex items-center gap-2 pt-1">
+<button class="flex-1 bg-surface-container-high text-primary font-label-md text-label-md py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 active:bg-primary active:text-on-primary transition-colors">
+<span>View Profile</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+<button aria-label="More actions" class="w-10 h-9 flex items-center justify-center bg-surface-container-low text-on-surface-variant rounded-xl active:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Worker Card 3 -->
+<div class="worker-card flex flex-col bg-surface-container-lowest rounded-xl p-4 shadow-sm space-y-3 transition-transform active:scale-[0.99]" data-id="WKR-7301" data-name="David K. Osei">
+<!-- Top Profile Row -->
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-center gap-3 min-w-0">
+<img class="w-12 h-12 rounded-xl object-cover bg-surface-container shrink-0" data-alt="Portrait headshot of David K. Osei, a charismatic civil equipment supervisor with safety helmet and high-visibility vest outdoors, modern civil engineering background with golden hour lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxjsspFAHH2hOX7OkoE1WBkjiTX72vpXKdrf0KIpBHSiKD7v3MDSQDhmTeIy6LSbhH86nI_BWHmG3x8l31fIxQTAprQJz9DDGXBJGh9dl2yMcdBKxJWkwYvQAoPeZm951pk2zAWm_dqGWUbVgoJRNO3Rgt8HwLPN8FMmkCa4a-er5PbI32tXQgXAP2-5xlrWQGyQVgZakJCZKCuqiPDbb_23TFYXLss89D5DZHX-940BJ3jcbA_YC_mg"/>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">David K. Osei</span>
+<span class="font-code-sm text-[11px] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">WKR-7301</span>
+</div>
+<span class="font-body-sm text-body-sm text-primary font-medium truncate mt-0.5">Heavy Civil Equipment Operator</span>
+<div class="flex items-center gap-1 text-on-surface-variant text-[11px] font-label-sm mt-0.5">
+<span class="material-symbols-outlined text-[13px] text-secondary">domain</span>
+<span class="truncate">Cascadia Forestry Collective · Since 2023</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-end gap-1 shrink-0">
+<span class="inline-flex items-center px-2 py-0.5 rounded font-label-sm text-label-sm bg-secondary-container text-on-secondary-container font-semibold">
+            Active · Contract
+          </span>
+</div>
+</div>
+<!-- Skills Matrix Tags -->
+<div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+<span class="inline-flex items-center gap-1 font-label-sm text-[11px] bg-surface-container-low text-on-surface px-2 py-0.5 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span>
+          Hydraulic Excavators <strong class="text-tertiary font-semibold">Adv</strong>
+</span>
+<span class="inline-flex items-center gap-1 font-label-sm text-[11px] bg-surface-container-low text-on-surface px-2 py-0.5 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+          Site Safety Compliance <strong class="text-secondary font-semibold">Int</strong>
+</span>
+</div>
+<!-- Certification Status Strip (Expiring in 8 days) -->
+<div class="flex items-center justify-between bg-error-container/40 px-2.5 py-1.5 rounded-lg text-on-error-container">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="material-symbols-outlined text-[16px] text-error shrink-0">warning</span>
+<span class="font-label-sm text-label-sm truncate font-medium">Heavy Machinery Cert</span>
+</div>
+<span class="shrink-0 font-label-sm text-[10px] px-2 py-0.5 rounded bg-error text-on-error font-semibold">Expiring in 8 days</span>
+</div>
+<!-- Card Actions -->
+<div class="flex items-center gap-2 pt-1">
+<button class="flex-1 bg-surface-container-high text-primary font-label-md text-label-md py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 active:bg-primary active:text-on-primary transition-colors">
+<span>View Profile</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+<button aria-label="More actions" class="w-10 h-9 flex items-center justify-center bg-surface-container-low text-on-surface-variant rounded-xl active:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Worker Card 4 -->
+<div class="worker-card flex flex-col bg-surface-container-lowest rounded-xl p-4 shadow-sm space-y-3 transition-transform active:scale-[0.99]" data-id="WKR-6512" data-name="Maria Santos">
+<!-- Top Profile Row -->
+<div class="flex items-start justify-between gap-3">
+<div class="flex items-center gap-3 min-w-0">
+<img class="w-12 h-12 rounded-xl object-cover bg-surface-container shrink-0" data-alt="Professional mobile worker profile of Maria Santos, a renewable solar technician smiling, standing beside modern photovoltaic arrays under sunny skies with clean bright enterprise look." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZsYDBjHKKfDmlvwZf8lGYKKBFSV9pQQG4WqfURao6v-SPxVMn5hw6c4h4uxD0JVdVhEl-Lw8PgOmjUEPC8yRHgDMSK1j3YCfwIgC_-N4TCf0l4-JHv5g0FUv--0qdEIGhSoxgcoNLx1KQzPz1d1SpRBj9VOSrjFUk5_o8WJWkQLQdrrUdP_GFP9w0g1B62mNw2jkAqhQ0N6L28ThMKdqwWRkM7g4CpchXn54WcHxuUPopAkihBWZsxg"/>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-headline-sm text-on-surface truncate">Maria Santos</span>
+<span class="font-code-sm text-[11px] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">WKR-6512</span>
+</div>
+<span class="font-body-sm text-body-sm text-primary font-medium truncate mt-0.5">Solar Array Technician</span>
+<div class="flex items-center gap-1 text-on-surface-variant text-[11px] font-label-sm mt-0.5">
+<span class="material-symbols-outlined text-[13px] text-secondary">domain</span>
+<span class="truncate">SunGrid Cooperative · Since 2024</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-end gap-1 shrink-0">
+<span class="inline-flex items-center px-2 py-0.5 rounded font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed-variant font-semibold">
+            In Onboarding · FT
+          </span>
+</div>
+</div>
+<!-- Skills Matrix Tags -->
+<div class="flex flex-wrap items-center gap-1.5 pt-0.5">
+<span class="inline-flex items-center gap-1 font-label-sm text-[11px] bg-surface-container-low text-on-surface px-2 py-0.5 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+          Photovoltaic Assembly <strong class="text-secondary font-semibold">Int</strong>
+</span>
+<span class="inline-flex items-center gap-1 font-label-sm text-[11px] bg-surface-container-low text-on-surface px-2 py-0.5 rounded">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+          High Voltage Safety <strong class="text-outline font-semibold">Beg</strong>
+</span>
+</div>
+<!-- Certification Status Strip (Pending Verification) -->
+<div class="flex items-center justify-between bg-surface-container px-2.5 py-1.5 rounded-lg text-on-surface">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="material-symbols-outlined text-[16px] text-primary shrink-0">pending_actions</span>
+<span class="font-label-sm text-label-sm truncate">NABCEP Associate</span>
+</div>
+<span class="shrink-0 font-label-sm text-[10px] px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-semibold">Pending Verification</span>
+</div>
+<!-- Card Actions -->
+<div class="flex items-center gap-2 pt-1">
+<button class="flex-1 bg-surface-container-high text-primary font-label-md text-label-md py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 active:bg-primary active:text-on-primary transition-colors">
+<span>View Profile</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+<button aria-label="More actions" class="w-10 h-9 flex items-center justify-center bg-surface-container-low text-on-surface-variant rounded-xl active:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Interactive Empty State (Hidden by default, triggered when no matches) -->
+<div class="hidden flex-col items-center justify-center bg-surface-container-lowest rounded-xl p-8 text-center space-y-3 shadow-sm" id="empty-state">
+<div class="w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[30px]">group_off</span>
+</div>
+<div class="flex flex-col space-y-1">
+<span class="font-headline-sm text-headline-sm text-on-surface">No Workers Found</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-xs">
+        No active worker profiles match your current search and filter parameters.
+      </p>
+</div>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-4 py-2 rounded-xl active:opacity-90 shadow-sm mt-2" id="reset-empty-btn">
+      Reset All Filters
+    </button>
+</div>
+<!-- Pagination & Directory Footer -->
+<div class="flex items-center justify-between pt-2 pb-6 text-on-surface-variant font-label-sm text-label-sm">
+<span class="text-[12px]">Showing <strong class="text-on-surface font-semibold">1–4</strong> of <strong class="text-on-surface font-semibold">2,845</strong> workers</span>
+<div class="flex items-center gap-1.5">
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest text-on-surface-variant flex items-center justify-center shadow-sm disabled:opacity-40" disabled="">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest text-on-surface flex items-center justify-center shadow-sm active:bg-surface-container">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    const searchInput = document.getElementById('worker-search');
+    const clearSearchBtn = document.getElementById('clear-search-btn');
+    const resetFiltersBtn = document.getElementById('reset-filters');
+    const resetEmptyBtn = document.getElementById('reset-empty-btn');
+    const workerCards = document.querySelectorAll('.worker-card');
+    const emptyState = document.getElementById('empty-state');
+    const statusTabs = document.querySelectorAll('.status-tab');
+
+    function applyFilter() {
+      const query = (searchInput.value || '').toLowerCase().trim();
+      if (query.length > 0) {
+        clearSearchBtn.classList.remove('hidden');
+      } else {
+        clearSearchBtn.classList.add('hidden');
+      }
+
+      let visibleCount = 0;
+      workerCards.forEach(card => {
+        const name = (card.getAttribute('data-name') || '').toLowerCase();
+        const id = (card.getAttribute('data-id') || '').toLowerCase();
+        const matches = name.includes(query) || id.includes(query);
+        if (matches) {
+          card.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+
+      if (visibleCount === 0) {
+        emptyState.classList.remove('hidden');
+        emptyState.classList.add('flex');
+      } else {
+        emptyState.classList.add('hidden');
+        emptyState.classList.remove('flex');
+      }
+    }
+
+    searchInput.addEventListener('input', applyFilter);
+
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      applyFilter();
+      searchInput.focus();
+    });
+
+    function resetAll() {
+      searchInput.value = '';
+      statusTabs.forEach(t => {
+        t.className = 'status-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant hover:text-on-surface shrink-0';
+      });
+      const allTab = document.querySelector('[data-status="all"]');
+      if (allTab) {
+        allTab.className = 'status-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm bg-primary text-on-primary shadow-sm shrink-0';
+      }
+      applyFilter();
+    }
+
+    resetFiltersBtn.addEventListener('click', resetAll);
+    resetEmptyBtn.addEventListener('click', resetAll);
+
+    statusTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        statusTabs.forEach(t => {
+          t.className = 'status-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant hover:text-on-surface shrink-0';
+        });
+        tab.className = 'status-tab flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm bg-primary text-on-primary shadow-sm shrink-0';
+      });
+    });
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]" data-active-classes="text-primary font-semibold"><div class="flex items-center justify-around h-16 px-space-2xs"><a class="flex flex-col items-center justify-center w-16 h-12 rounded-xl text-on-surface-variant active:bg-surface-container" data-path="dashboard" href="#"><span class="material-symbols-outlined text-[22px]">grid_view</span><span class="font-label-sm text-label-sm mt-0.5">Dashboard</span></a><a aria-current="page" class="flex flex-col items-center justify-center w-16 h-12 rounded-xl active:bg-surface-container text-primary font-semibold" data-path="workers" href="#"><span class="material-symbols-outlined text-[22px]">group</span><span class="font-label-sm text-label-sm mt-0.5">Workers</span></a><a class="flex flex-col items-center justify-center w-16 h-12 rounded-xl text-on-surface-variant active:bg-surface-container" data-path="skills" href="#"><span class="material-symbols-outlined text-[22px]">verified</span><span class="font-label-sm text-label-sm mt-0.5">Skills</span></a><a class="flex flex-col items-center justify-center w-16 h-12 rounded-xl text-on-surface-variant active:bg-surface-container" data-path="certs" href="#"><span class="material-symbols-outlined text-[22px]">workspace_premium</span><span class="font-label-sm text-label-sm mt-0.5">Certs</span></a><a class="flex flex-col items-center justify-center w-16 h-12 rounded-xl text-on-surface-variant active:bg-surface-container" data-path="coops" href="#"><span class="material-symbols-outlined text-[22px]">account_balance</span><span class="font-label-sm text-label-sm mt-0.5">Coops</span></a></div></nav></body></html>
