@@ -26,10 +26,10 @@ const INITIAL_SKILLS: IWorkerSkill[] = [
     skillId: 's-elec-01',
     skill: {
       id: 's-elec-01',
-      code: 'ELEC-IND',
-      name: 'Industrial Electrical & Conduit Wiring',
+      code: 'ELEC-01',
+      name: 'Industrial Electrical Repair',
       category: 'Electrical',
-      description: '3-phase wiring, industrial breaker installation, commercial transformers',
+      description: '3-phase wiring, industrial breaker installation',
     },
     proficiencyLevel: ProficiencyLevel.EXPERT,
     isVerified: true,
@@ -42,10 +42,10 @@ const INITIAL_SKILLS: IWorkerSkill[] = [
     skillId: 's-plumb-02',
     skill: {
       id: 's-plumb-02',
-      code: 'PLUMB-COMM',
-      name: 'Commercial Pipefitting & Hydraulics',
+      code: 'PLUMB-02',
+      name: 'Commercial Pipefitting',
       category: 'Plumbing',
-      description: 'High-pressure water distribution, PPR pipe jointing, pump manifolds',
+      description: 'High-pressure water distribution and pump manifolds',
     },
     proficiencyLevel: ProficiencyLevel.ADVANCED,
     isVerified: true,
@@ -55,18 +55,18 @@ const INITIAL_SKILLS: IWorkerSkill[] = [
   {
     id: 'ws-103',
     workerId: 'w-dev-01',
-    skillId: 's-solar-03',
+    skillId: 's-ac-03',
     skill: {
-      id: 's-solar-03',
-      code: 'SOLAR-PV',
-      name: 'Rooftop Solar PV Installation',
-      category: 'Renewable Energy',
-      description: 'Solar panel array mounting, microinverter connections, net metering',
+      id: 's-ac-03',
+      code: 'HVAC-03',
+      name: 'Central AC Maintenance',
+      category: 'HVAC',
+      description: 'Chiller refrigerant checks and duct airflow diagnostics',
     },
     proficiencyLevel: ProficiencyLevel.INTERMEDIATE,
     isVerified: false,
-    createdAt: '2026-03-01T15:00:00.000Z',
-    updatedAt: '2026-03-01T15:00:00.000Z',
+    createdAt: '2026-03-01T08:00:00.000Z',
+    updatedAt: '2026-03-01T08:00:00.000Z',
   },
 ];
 
@@ -75,28 +75,28 @@ const INITIAL_JOBS: IJobAssignment[] = [
     id: 'job-01',
     bookingId: 'bk-901',
     serviceRequestId: 'sr-901',
-    customerName: 'Apex Logistics Distribution Center',
+    customerName: 'DLF Cyber City Building 4',
     serviceCategory: 'Electrical',
-    title: 'Commercial Breaker Inspection & Thermal Scan',
-    description: 'Annual distribution board audit, infrared scan of 400A main switches.',
-    locationAddress: 'Plot 42, Okhla Industrial Area Phase III, New Delhi',
-    distanceKm: 2.8,
-    scheduledAt: 'Today, 2:30 PM',
-    estimatedPayout: 2550,
+    title: 'Emergency AC Electrical Panel Tripping',
+    description: 'Main breaker trips upon activating condenser unit 2.',
+    locationAddress: 'DLF Cyber City, Sector 24, Gurugram',
+    distanceKm: 3.2,
+    scheduledAt: 'Today, 2:00 PM',
+    estimatedPayout: 1500,
     status: 'PENDING_ACCEPTANCE',
   },
   {
     id: 'job-02',
-    bookingId: 'bk-882',
-    serviceRequestId: 'sr-882',
-    customerName: 'Mayfair Residency Cooperative Society',
+    bookingId: 'bk-842',
+    serviceRequestId: 'sr-842',
+    customerName: 'Prestige Tech Park Office 3',
     serviceCategory: 'Plumbing',
-    title: 'Underground Reservoir Booster Pump Repair',
-    description: 'Replace faulty non-return valve and pressure switch calibrator.',
-    locationAddress: 'Gate 2, Mayfair Gardens, Hauz Khas, New Delhi',
+    title: 'Hydraulic Booster Pump Servicing',
+    description: 'Periodic pressure calibration and flange replacement.',
+    locationAddress: 'Outer Ring Road, Marathahalli',
     distanceKm: 5.4,
-    scheduledAt: 'Tomorrow, 10:00 AM',
-    estimatedPayout: 1800,
+    scheduledAt: 'Today, 4:30 PM',
+    estimatedPayout: 2200,
     status: 'ACCEPTED',
   },
   {
@@ -105,11 +105,11 @@ const INITIAL_JOBS: IJobAssignment[] = [
     serviceRequestId: 'sr-710',
     customerName: 'Metro Rail Substation Office',
     serviceCategory: 'Electrical',
-    title: 'Backup Generator Emergency Auto-Transfer Switch',
+    title: 'Backup Generator Emergency ATS Test',
     description: 'Tested ATS response under load simulation, replaced auxiliary contacts.',
     locationAddress: 'Barakhamba Road Station Compound, Connaught Place',
     distanceKm: 4.1,
-    scheduledAt: '8 Sep 2026',
+    scheduledAt: 'Yesterday',
     estimatedPayout: 3200,
     status: 'COMPLETED',
   },
@@ -118,7 +118,8 @@ const INITIAL_JOBS: IJobAssignment[] = [
 function WorkerAppContent() {
   const { user, login, register, logout, isLoading, error } = useAuth();
   const [screen, setScreen] = useState<'login' | 'register'>('login');
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'skills' | 'jobs' | 'profile'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'home' | 'jobs' | 'skills' | 'profile'>('home');
+  const [jobsFilter, setJobsFilter] = useState<'all' | 'upcoming' | 'active' | 'completed'>('all');
 
   // Operational State
   const [availability, setAvailability] = useState<WorkerAvailabilityStatus>(WorkerAvailabilityStatus.AVAILABLE);
@@ -150,10 +151,10 @@ function WorkerAppContent() {
     apiClient.patch('/workers/me/availability', { status: newStatus }).catch(() => {});
     const label =
       newStatus === WorkerAvailabilityStatus.AVAILABLE
-        ? 'Active & Available for Dispatches'
+        ? 'Available for work'
         : newStatus === WorkerAvailabilityStatus.BUSY
-        ? 'Busy on Active Assignment'
-        : 'Offline / Off-Duty';
+        ? 'Busy on a job'
+        : 'Offline';
     triggerNotification(`Status updated: ${label}`);
   };
 
@@ -169,9 +170,9 @@ function WorkerAppContent() {
     const bId = target?.bookingId || jobId;
     apiClient.post(`/workers/me/jobs/${bId}/respond`, { action }).catch(() => {});
     if (action === 'ACCEPT') {
-      triggerNotification('Job accepted! Customer notified and dispatch confirmed.');
+      triggerNotification('Job accepted! Customer notified.');
     } else {
-      triggerNotification('Job declined and returned to cooperative dispatch pool.');
+      triggerNotification('Job declined and sent back to cooperative.');
     }
   };
 
@@ -198,631 +199,609 @@ function WorkerAppContent() {
     apiClient.post('/workers/me/skills', { skillId: customSkillId, proficiencyLevel: newSkillLevel }).catch(() => {});
     setNewSkillName('');
     setIsSkillModalVisible(false);
-    triggerNotification('New skill endorsement submitted for Cooperative Society verification!');
+    triggerNotification('Skill added! Submitted for cooperative verification.');
   };
 
   // 1. Authenticated Worker View
   if (user) {
     const pendingJob = jobsList.find((j) => j.status === 'PENDING_ACCEPTANCE');
+    const upcomingJob = jobsList.find((j) => j.status === 'ACCEPTED');
     const activeJobs = jobsList.filter((j) => j.status === 'ACCEPTED');
     const completedJobs = jobsList.filter((j) => j.status === 'COMPLETED');
 
+    const filteredJobs = jobsList.filter((j) => {
+      if (jobsFilter === 'upcoming') return j.status === 'PENDING_ACCEPTANCE';
+      if (jobsFilter === 'active') return j.status === 'ACCEPTED';
+      if (jobsFilter === 'completed') return j.status === 'COMPLETED';
+      return true;
+    });
+
     return (
       <SafeAreaView style={styles.container}>
-        {/* Top Operational Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>CSHRK Worker</Text>
-            <Text style={styles.headerSubtitle}>Delhi Central Labour Cooperative Society</Text>
-          </View>
-          <View
-            style={[
-              styles.statusBadge,
-              availability === WorkerAvailabilityStatus.AVAILABLE
-                ? styles.badgeAvailable
-                : availability === WorkerAvailabilityStatus.BUSY
-                ? styles.badgeBusy
-                : styles.badgeOffline,
-            ]}
-          >
-            <View
-              style={[
-                styles.statusDot,
-                availability === WorkerAvailabilityStatus.AVAILABLE
-                  ? styles.dotAvailable
-                  : availability === WorkerAvailabilityStatus.BUSY
-                  ? styles.dotBusy
-                  : styles.dotOffline,
-              ]}
-            />
-            <Text style={styles.statusBadgeText}>
-              {availability === WorkerAvailabilityStatus.AVAILABLE
-                ? 'AVAILABLE'
-                : availability === WorkerAvailabilityStatus.BUSY
-                ? 'BUSY'
-                : 'OFFLINE'}
-            </Text>
-          </View>
-        </View>
-
-        {/* Global Toast / Banner */}
+        {/* Simple Notification Toast */}
         {notificationMsg && (
-          <View style={styles.toastBanner}>
+          <View style={styles.toast}>
             <Text style={styles.toastText}>{notificationMsg}</Text>
           </View>
         )}
 
-        {/* Tab Body */}
-        <ScrollView style={styles.body} contentContainerStyle={{ paddingBottom: 24 }}>
-          {/* TAB 1: WORKER DASHBOARD */}
-          {activeTab === 'dashboard' && (
-            <View>
-              {/* Availability Switcher Card */}
-              <View style={styles.card}>
-                <Text style={styles.sectionHeader}>Operational Availability</Text>
-                <Text style={styles.sectionSub}>
-                  Toggle your current dispatch readiness. Nearby cooperative jobs are matched in real-time.
+        {/* Content Scroll View */}
+        <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
+          {/* ==================================================== */}
+          {/* TAB 1: HOME (Worker Dashboard)                       */}
+          {/* ==================================================== */}
+          {activeTab === 'home' && (
+            <View style={styles.tabContent}>
+              {/* Header Greeting */}
+              <View style={styles.homeHeader}>
+                <Text style={styles.greetingText}>
+                  Good morning, {(user as any).fullName || 'Carlos'}
                 </Text>
-                <View style={styles.availabilityToggleRow}>
+                <Text style={styles.subGreetingText}>
+                  Senior Electrician • Apex Agro Cooperative
+                </Text>
+              </View>
+
+              {/* Status Control Card */}
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>YOUR STATUS</Text>
+                <View style={styles.statusRow}>
                   <TouchableOpacity
                     style={[
-                      styles.toggleBtn,
-                      availability === WorkerAvailabilityStatus.AVAILABLE && styles.toggleBtnActiveAvail,
+                      styles.statusButton,
+                      availability === WorkerAvailabilityStatus.AVAILABLE && styles.statusBtnAvailableActive,
                     ]}
                     onPress={() => handleAvailabilityChange(WorkerAvailabilityStatus.AVAILABLE)}
                   >
+                    <View
+                      style={[
+                        styles.statusDot,
+                        {
+                          backgroundColor:
+                            availability === WorkerAvailabilityStatus.AVAILABLE ? '#fff' : '#16a34a',
+                        },
+                      ]}
+                    />
                     <Text
                       style={[
-                        styles.toggleBtnText,
-                        availability === WorkerAvailabilityStatus.AVAILABLE && styles.toggleBtnTextActive,
+                        styles.statusBtnText,
+                        availability === WorkerAvailabilityStatus.AVAILABLE && styles.statusBtnTextActive,
                       ]}
                     >
-                      ● Available
+                      Available
                     </Text>
                   </TouchableOpacity>
+
                   <TouchableOpacity
                     style={[
-                      styles.toggleBtn,
-                      availability === WorkerAvailabilityStatus.BUSY && styles.toggleBtnActiveBusy,
+                      styles.statusButton,
+                      availability === WorkerAvailabilityStatus.BUSY && styles.statusBtnBusyActive,
                     ]}
                     onPress={() => handleAvailabilityChange(WorkerAvailabilityStatus.BUSY)}
                   >
+                    <View
+                      style={[
+                        styles.statusDot,
+                        {
+                          backgroundColor:
+                            availability === WorkerAvailabilityStatus.BUSY ? '#fff' : '#d97706',
+                        },
+                      ]}
+                    />
                     <Text
                       style={[
-                        styles.toggleBtnText,
-                        availability === WorkerAvailabilityStatus.BUSY && styles.toggleBtnTextActive,
+                        styles.statusBtnText,
+                        availability === WorkerAvailabilityStatus.BUSY && styles.statusBtnTextActive,
                       ]}
                     >
-                      ● Busy
+                      Busy
                     </Text>
                   </TouchableOpacity>
+
                   <TouchableOpacity
                     style={[
-                      styles.toggleBtn,
-                      availability === WorkerAvailabilityStatus.OFFLINE && styles.toggleBtnActiveOffline,
+                      styles.statusButton,
+                      availability === WorkerAvailabilityStatus.OFFLINE && styles.statusBtnOfflineActive,
                     ]}
                     onPress={() => handleAvailabilityChange(WorkerAvailabilityStatus.OFFLINE)}
                   >
+                    <View
+                      style={[
+                        styles.statusDot,
+                        {
+                          backgroundColor:
+                            availability === WorkerAvailabilityStatus.OFFLINE ? '#fff' : '#64748b',
+                        },
+                      ]}
+                    />
                     <Text
                       style={[
-                        styles.toggleBtnText,
-                        availability === WorkerAvailabilityStatus.OFFLINE && styles.toggleBtnTextActive,
+                        styles.statusBtnText,
+                        availability === WorkerAvailabilityStatus.OFFLINE && styles.statusBtnTextActive,
                       ]}
                     >
-                      ● Offline
+                      Offline
                     </Text>
                   </TouchableOpacity>
                 </View>
               </View>
 
-              {/* Urgent Dispatch Request (Job Acceptance Flow) */}
-              {pendingJob && availability !== WorkerAvailabilityStatus.OFFLINE && (
-                <View style={styles.urgentDispatchCard}>
-                  <View style={styles.urgentHeaderRow}>
-                    <Text style={styles.urgentTag}>🚨 INCOMING JOB DISPATCH</Text>
-                    <Text style={styles.urgentDistance}>{pendingJob.distanceKm} km away</Text>
+              {/* TODAY Summary Card */}
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>TODAY</Text>
+                <View style={styles.todayStatsRow}>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statNumber}>2</Text>
+                    <Text style={styles.statLabel}>Today's jobs</Text>
                   </View>
-                  <Text style={styles.urgentTitle}>{pendingJob.title}</Text>
-                  <Text style={styles.urgentCustomer}>{pendingJob.customerName}</Text>
-                  <Text style={styles.urgentAddress}>📍 {pendingJob.locationAddress}</Text>
-
-                  <View style={styles.urgentMetaRow}>
-                    <View>
-                      <Text style={styles.metaLabel}>Schedule</Text>
-                      <Text style={styles.metaVal}>{pendingJob.scheduledAt}</Text>
-                    </View>
-                    <View>
-                      <Text style={styles.metaLabel}>Estimated Payout</Text>
-                      <Text style={styles.payoutVal}>₹ {pendingJob.estimatedPayout}</Text>
-                    </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statBox}>
+                    <Text style={styles.statNumber}>1</Text>
+                    <Text style={styles.statLabel}>Completed</Text>
                   </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statBox}>
+                    <Text style={styles.statNumber}>1</Text>
+                    <Text style={styles.statLabel}>Upcoming</Text>
+                  </View>
+                </View>
+              </View>
 
-                  <View style={styles.actionButtonRow}>
+              {/* Urgent New Job Request Banner (if any) */}
+              {pendingJob && (
+                <View style={[styles.card, styles.newJobCard]}>
+                  <View style={styles.newJobBadge}>
+                    <Text style={styles.newJobBadgeText}>NEW JOB REQUEST</Text>
+                  </View>
+                  <Text style={styles.newJobTitle}>{pendingJob.title}</Text>
+                  <Text style={styles.newJobLocation}>
+                    📍 {pendingJob.locationAddress} ({pendingJob.distanceKm} km away)
+                  </Text>
+                  <Text style={styles.newJobPayout}>₹{pendingJob.estimatedPayout}</Text>
+
+                  <View style={styles.newJobActions}>
                     <TouchableOpacity
-                      style={styles.acceptButton}
+                      style={styles.btnAccept}
                       onPress={() => handleJobResponse(pendingJob.id, 'ACCEPT')}
                     >
-                      <Text style={styles.acceptButtonText}>Accept Assignment</Text>
+                      <Text style={styles.btnAcceptText}>Accept Job</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={styles.declineButton}
+                      style={styles.btnDecline}
                       onPress={() => handleJobResponse(pendingJob.id, 'DECLINE')}
                     >
-                      <Text style={styles.declineButtonText}>Decline</Text>
+                      <Text style={styles.btnDeclineText}>Decline</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
               )}
 
-              {/* KPI Performance Tiles */}
-              <View style={styles.kpiGrid}>
-                <View style={styles.kpiTile}>
-                  <Text style={styles.kpiLabel}>Jobs Completed</Text>
-                  <Text style={styles.kpiValue}>28</Text>
-                  <Text style={styles.kpiSub}>+4 this week</Text>
-                </View>
-                <View style={styles.kpiTile}>
-                  <Text style={styles.kpiLabel}>Quality Rating</Text>
-                  <Text style={styles.kpiValue}>4.9 ★</Text>
-                  <Text style={styles.kpiSub}>32 Customer Reviews</Text>
-                </View>
-                <View style={styles.kpiTile}>
-                  <Text style={styles.kpiLabel}>On-Time Rate</Text>
-                  <Text style={styles.kpiValue}>98%</Text>
-                  <Text style={styles.kpiSub}>Cooperative Tier 1</Text>
-                </View>
-                <View style={styles.kpiTile}>
-                  <Text style={styles.kpiLabel}>Member ID</Text>
-                  <Text style={styles.kpiValueSmall}>DL-2024-89</Text>
-                  <Text style={styles.kpiSub}>Full Member</Text>
-                </View>
-              </View>
+              {/* NEXT JOB Card */}
+              {upcomingJob && (
+                <View style={styles.card}>
+                  <Text style={styles.sectionTitle}>NEXT JOB</Text>
+                  <Text style={styles.jobTitleText}>{upcomingJob.title}</Text>
+                  <Text style={styles.jobDetailText}>🏢 {upcomingJob.customerName}</Text>
+                  <Text style={styles.jobDetailText}>🕒 {upcomingJob.scheduledAt}</Text>
+                  <Text style={styles.jobDetailText}>📍 {upcomingJob.distanceKm} km away</Text>
 
-              {/* Quick Skill Passport Snapshot */}
-              <View style={styles.card}>
-                <View style={styles.cardHeaderFlex}>
-                  <Text style={styles.sectionHeader}>Verified Skill Passport</Text>
-                  <TouchableOpacity onPress={() => setActiveTab('skills')}>
-                    <Text style={styles.linkText}>View All →</Text>
+                  <TouchableOpacity
+                    style={styles.btnViewJob}
+                    onPress={() => setActiveTab('jobs')}
+                  >
+                    <Text style={styles.btnViewJobText}>View Job Details</Text>
                   </TouchableOpacity>
                 </View>
-                {skillsList.slice(0, 2).map((sk) => (
-                  <View key={sk.id} style={styles.miniSkillItem}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.skillItemName}>{sk.skill?.name}</Text>
-                      <Text style={styles.skillItemCat}>{sk.skill?.category} • Level: {sk.proficiencyLevel}</Text>
-                    </View>
-                    {sk.isVerified ? (
-                      <View style={styles.verifiedTag}>
-                        <Text style={styles.verifiedTagText}>✓ Verified</Text>
-                      </View>
-                    ) : (
-                      <View style={styles.pendingTag}>
-                        <Text style={styles.pendingTagText}>⏳ Pending</Text>
-                      </View>
-                    )}
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* TAB 2: SKILL PASSPORT */}
-          {activeTab === 'skills' && (
-            <View>
-              <View style={styles.passportBannerCard}>
-                <Text style={styles.passportBannerTitle}>Official Skill Passport</Text>
-                <Text style={styles.passportBannerSub}>
-                  Standardized trades certified by Primary Labour Cooperative Society under National Federation standards.
-                </Text>
-                <View style={styles.passportStatsRow}>
-                  <View style={styles.passportStat}>
-                    <Text style={styles.passportStatNum}>
-                      {skillsList.filter((s) => s.isVerified).length}
-                    </Text>
-                    <Text style={styles.passportStatLabel}>Verified Trades</Text>
-                  </View>
-                  <View style={styles.passportStat}>
-                    <Text style={styles.passportStatNum}>
-                      {skillsList.filter((s) => !s.isVerified).length}
-                    </Text>
-                    <Text style={styles.passportStatLabel}>Under Review</Text>
-                  </View>
-                  <View style={styles.passportStat}>
-                    <Text style={styles.passportStatNum}>2</Text>
-                    <Text style={styles.passportStatLabel}>Certifications</Text>
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.actionHeaderRow}>
-                <Text style={styles.sectionHeader}>Registered Trade Credentials</Text>
-                <TouchableOpacity
-                  style={styles.claimSkillBtn}
-                  onPress={() => setIsSkillModalVisible(true)}
-                >
-                  <Text style={styles.claimSkillBtnText}>+ Claim Trade</Text>
-                </TouchableOpacity>
-              </View>
-
-              {skillsList.map((ws) => (
-                <View key={ws.id} style={styles.skillFullCard}>
-                  <View style={styles.skillCardTop}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.skillCardTitle}>{ws.skill?.name}</Text>
-                      <Text style={styles.skillCardCode}>Code: {ws.skill?.code} • {ws.skill?.category}</Text>
-                    </View>
-                    <View style={styles.levelBadge}>
-                      <Text style={styles.levelBadgeText}>{ws.proficiencyLevel}</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.skillCardDesc}>{ws.skill?.description || 'Standardized trade certification.'}</Text>
-                  <View style={styles.skillCardBottom}>
-                    {ws.isVerified ? (
-                      <View style={styles.verifiedBadgeFull}>
-                        <Text style={styles.verifiedBadgeText}>
-                          ✓ Verified by Delhi Central Labour Society
-                        </Text>
-                      </View>
-                    ) : (
-                      <View style={styles.pendingBadgeFull}>
-                        <Text style={styles.pendingBadgeText}>
-                          ⏳ Pending Cooperative Committee Review
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              ))}
-
-              {/* Certifications Section */}
-              <Text style={[styles.sectionHeader, { marginTop: 24, marginBottom: 12 }]}>
-                Government & Federation Certifications
-              </Text>
-              <View style={styles.certCard}>
-                <Text style={styles.certTitle}>NSDC National Trade Qualification (Level 4)</Text>
-                <Text style={styles.certIssuer}>Issued by: National Skill Development Corporation</Text>
-                <Text style={styles.certStatus}>✓ Verified Credentials • Valid through Dec 2028</Text>
-              </View>
-              <View style={styles.certCard}>
-                <Text style={styles.certTitle}>Industrial High-Voltage Safety Accreditation</Text>
-                <Text style={styles.certIssuer}>Issued by: Federation Training Academy</Text>
-                <Text style={styles.certStatus}>✓ Verified Credentials • Valid through Aug 2027</Text>
-              </View>
-            </View>
-          )}
-
-          {/* TAB 3: JOBS & ASSIGNMENTS */}
-          {activeTab === 'jobs' && (
-            <View>
-              <Text style={styles.sectionHeader}>Dispatch Assignments</Text>
-              <Text style={styles.sectionSub}>Review pending tenders, active works, and completed services.</Text>
-
-              {/* Active Jobs */}
-              <Text style={[styles.subHeader, { marginTop: 16 }]}>Active / En Route ({activeJobs.length})</Text>
-              {activeJobs.length === 0 ? (
-                <View style={styles.emptyCard}>
-                  <Text style={styles.emptyText}>No active jobs currently in progress.</Text>
-                </View>
-              ) : (
-                activeJobs.map((j) => (
-                  <View key={j.id} style={styles.jobCard}>
-                    <View style={styles.jobStatusRow}>
-                      <View style={styles.activeTag}>
-                        <Text style={styles.activeTagText}>ACCEPTED & SCHEDULED</Text>
-                      </View>
-                      <Text style={styles.jobPayout}>₹ {j.estimatedPayout}</Text>
-                    </View>
-                    <Text style={styles.jobTitle}>{j.title}</Text>
-                    <Text style={styles.jobCustomer}>{j.customerName}</Text>
-                    <Text style={styles.jobAddress}>📍 {j.locationAddress}</Text>
-                    <Text style={styles.jobTime}>🕒 {j.scheduledAt}</Text>
-                  </View>
-                ))
               )}
 
-              {/* History */}
-              <Text style={[styles.subHeader, { marginTop: 20 }]}>Completed History ({completedJobs.length})</Text>
-              {completedJobs.map((j) => (
-                <View key={j.id} style={styles.jobCardHistory}>
-                  <View style={styles.jobStatusRow}>
-                    <View style={styles.completedTag}>
-                      <Text style={styles.completedTagText}>✓ COMPLETED</Text>
-                    </View>
-                    <Text style={styles.historyPayout}>₹ {j.estimatedPayout}</Text>
+              {/* MY WORK (Quick Information) */}
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>MY WORK</Text>
+                <View style={styles.todayStatsRow}>
+                  <View style={styles.statBox}>
+                    <Text style={styles.statNumber}>28</Text>
+                    <Text style={styles.statLabel}>Jobs completed</Text>
                   </View>
-                  <Text style={styles.jobTitle}>{j.title}</Text>
-                  <Text style={styles.jobCustomer}>{j.customerName}</Text>
-                  <Text style={styles.jobTime}>Finished on {j.scheduledAt}</Text>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statBox}>
+                    <Text style={styles.statNumber}>⭐ 4.9</Text>
+                    <Text style={styles.statLabel}>Rating</Text>
+                  </View>
+                  <View style={styles.statDivider} />
+                  <View style={styles.statBox}>
+                    <Text style={styles.statNumber}>₹38,500</Text>
+                    <Text style={styles.statLabel}>This month</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* ==================================================== */}
+          {/* TAB 2: MY JOBS                                       */}
+          {/* ==================================================== */}
+          {activeTab === 'jobs' && (
+            <View style={styles.tabContent}>
+              <View style={styles.homeHeader}>
+                <Text style={styles.greetingText}>My Jobs</Text>
+                <Text style={styles.subGreetingText}>
+                  Assigned dispatches and job history
+                </Text>
+              </View>
+
+              {/* Simple 3 Filters */}
+              <View style={styles.pillRow}>
+                <TouchableOpacity
+                  style={[styles.pill, jobsFilter === 'all' && styles.pillActive]}
+                  onPress={() => setJobsFilter('all')}
+                >
+                  <Text style={[styles.pillText, jobsFilter === 'all' && styles.pillTextActive]}>
+                    All ({jobsList.length})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.pill, jobsFilter === 'upcoming' && styles.pillActive]}
+                  onPress={() => setJobsFilter('upcoming')}
+                >
+                  <Text style={[styles.pillText, jobsFilter === 'upcoming' && styles.pillTextActive]}>
+                    Upcoming ({jobsList.filter((j) => j.status === 'PENDING_ACCEPTANCE').length})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.pill, jobsFilter === 'active' && styles.pillActive]}
+                  onPress={() => setJobsFilter('active')}
+                >
+                  <Text style={[styles.pillText, jobsFilter === 'active' && styles.pillTextActive]}>
+                    Active ({activeJobs.length})
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.pill, jobsFilter === 'completed' && styles.pillActive]}
+                  onPress={() => setJobsFilter('completed')}
+                >
+                  <Text style={[styles.pillText, jobsFilter === 'completed' && styles.pillTextActive]}>
+                    Completed ({completedJobs.length})
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Jobs List */}
+              {filteredJobs.map((job) => (
+                <View key={job.id} style={styles.card}>
+                  <View style={styles.jobHeaderRow}>
+                    <Text style={styles.jobTitleText}>{job.title}</Text>
+                    <Text style={styles.jobPayoutTag}>₹{job.estimatedPayout}</Text>
+                  </View>
+                  <Text style={styles.jobDetailText}>👤 {job.customerName}</Text>
+                  <Text style={styles.jobDetailText}>📍 {job.locationAddress}</Text>
+                  <Text style={styles.jobDetailText}>
+                    🕒 {job.scheduledAt} • {job.distanceKm} km away
+                  </Text>
+
+                  {job.status === 'PENDING_ACCEPTANCE' ? (
+                    <View style={styles.newJobActions}>
+                      <TouchableOpacity
+                        style={styles.btnAccept}
+                        onPress={() => handleJobResponse(job.id, 'ACCEPT')}
+                      >
+                        <Text style={styles.btnAcceptText}>Accept</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.btnDecline}
+                        onPress={() => handleJobResponse(job.id, 'DECLINE')}
+                      >
+                        <Text style={styles.btnDeclineText}>Decline</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={styles.jobStatusRow}>
+                      <Text
+                        style={[
+                          styles.jobStatusBadge,
+                          job.status === 'ACCEPTED' ? styles.badgeActive : styles.badgeDone,
+                        ]}
+                      >
+                        {job.status === 'ACCEPTED' ? 'Active Job' : 'Completed'}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               ))}
             </View>
           )}
 
-          {/* TAB 4: PROFILE */}
-          {activeTab === 'profile' && (
-            <View>
-              <View style={styles.card}>
-                <View style={styles.profileAvatarRow}>
-                  <View style={styles.avatarCircle}>
-                    <Text style={styles.avatarInitials}>
-                      {user.email.slice(0, 2).toUpperCase()}
-                    </Text>
-                  </View>
-                  <View style={{ marginLeft: 16 }}>
-                    <Text style={styles.profileName}>Dev Worker Member</Text>
-                    <Text style={styles.profileEmail}>{user.email}</Text>
-                    <Text style={styles.profileRole}>Role: {user.role}</Text>
-                  </View>
+          {/* ==================================================== */}
+          {/* TAB 3: MY SKILLS                                     */}
+          {/* ==================================================== */}
+          {activeTab === 'skills' && (
+            <View style={styles.tabContent}>
+              <View style={styles.skillsHeaderRow}>
+                <View>
+                  <Text style={styles.greetingText}>My Skills</Text>
+                  <Text style={styles.subGreetingText}>
+                    Verified trade competencies
+                  </Text>
                 </View>
-              </View>
-
-              <View style={styles.card}>
-                <Text style={styles.sectionHeader}>Cooperative Affiliation</Text>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Society</Text>
-                  <Text style={styles.detailVal}>Delhi Central Labour Society</Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Registration ID</Text>
-                  <Text style={styles.detailVal}>REG-DL-2018-0912</Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Member Code</Text>
-                  <Text style={styles.detailVal}>DL-LCS-2024-089</Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Welfare Scheme</Text>
-                  <Text style={styles.detailVal}>Active (Health & Accident Coverage)</Text>
-                </View>
-              </View>
-
-              <View style={styles.card}>
-                <Text style={styles.sectionHeader}>Operational Settings</Text>
                 <TouchableOpacity
-                  style={styles.settingToggleRow}
-                  onPress={() => {
-                    const nextGps = !gpsActive;
-                    setGpsActive(nextGps);
-                    if (nextGps) {
-                      apiClient.patch('/workers/me/location', { latitude: 28.6139, longitude: 77.2090 }).catch(() => {});
-                    }
-                    triggerNotification(
-                      nextGps
-                        ? 'Real-time GPS broadcasting active'
-                        : 'GPS location broadcasting paused'
-                    );
-                  }}
+                  style={styles.btnAddSkill}
+                  onPress={() => setIsSkillModalVisible(true)}
                 >
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.settingLabel}>GPS Location Broadcasting</Text>
-                    <Text style={styles.settingSub}>
-                      Transmits coordinates for nearby dispatch matching
-                    </Text>
-                  </View>
-                  <View
-                    style={[
-                      styles.toggleSwitch,
-                      gpsActive ? styles.toggleSwitchOn : styles.toggleSwitchOff,
-                    ]}
-                  >
-                    <Text style={styles.toggleSwitchText}>{gpsActive ? 'ON' : 'OFF'}</Text>
-                  </View>
+                  <Text style={styles.btnAddSkillText}>+ Add Skill</Text>
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-                <Text style={styles.buttonText}>Sign Out</Text>
+              {skillsList.map((item) => (
+                <View key={item.id} style={styles.card}>
+                  <View style={styles.skillRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.skillName}>{item.skill?.name || 'Trade Skill'}</Text>
+                      <Text style={styles.skillSub}>
+                        Category: {item.skill?.category || 'General'} • Level: {item.proficiencyLevel}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.badgeWrapper,
+                        item.isVerified ? styles.badgeVerified : styles.badgePending,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.badgeText,
+                          item.isVerified ? styles.badgeTextVerified : styles.badgeTextPending,
+                        ]}
+                      >
+                        {item.isVerified ? 'Verified' : 'Pending'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* ==================================================== */}
+          {/* TAB 4: MY PROFILE                                    */}
+          {/* ==================================================== */}
+          {activeTab === 'profile' && (
+            <View style={styles.tabContent}>
+              <View style={styles.homeHeader}>
+                <Text style={styles.greetingText}>My Profile</Text>
+                <Text style={styles.subGreetingText}>
+                  Personal and cooperative society info
+                </Text>
+              </View>
+
+              {/* Profile Card */}
+              <View style={styles.card}>
+                <View style={styles.profileRow}>
+                  <View style={styles.avatarCircle}>
+                    <Text style={styles.avatarLetter}>
+                      {(user as any).fullName ? (user as any).fullName[0].toUpperCase() : 'C'}
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.profileName}>{(user as any).fullName || 'Carlos Mendez'}</Text>
+                    <Text style={styles.profileRole}>Senior Electrician</Text>
+                    <Text style={styles.profileId}>Worker ID: WKR-8042</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Details Card */}
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>BASIC INFORMATION</Text>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailKey}>Phone Number</Text>
+                  <Text style={styles.detailVal}>+1 (555) 019-2831</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailKey}>Email Address</Text>
+                  <Text style={styles.detailVal}>{user.email || 'carlos.mendez@worker.cshrk.org'}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailKey}>Cooperative Society</Text>
+                  <Text style={styles.detailVal}>Apex Agro Cooperative</Text>
+                </View>
+              </View>
+
+              {/* Quick Links Card */}
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>QUALIFICATIONS</Text>
+                <TouchableOpacity
+                  style={styles.menuRow}
+                  onPress={() => setActiveTab('skills')}
+                >
+                  <Text style={styles.menuLabel}>My Skills ({skillsList.length})</Text>
+                  <Text style={styles.menuArrow}>→</Text>
+                </TouchableOpacity>
+                <View style={styles.statDivider} />
+                <View style={styles.menuRow}>
+                  <Text style={styles.menuLabel}>Safety Certificates (2 Valid)</Text>
+                  <Text style={styles.menuArrow}>✓</Text>
+                </View>
+              </View>
+
+              {/* Location Sharing Card */}
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>SETTINGS</Text>
+                <View style={styles.settingRow}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.menuLabel}>Location Sharing</Text>
+                    <Text style={styles.skillSub}>
+                      Allows nearby jobs to find your location
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={[
+                      styles.toggleBtn,
+                      gpsActive ? styles.toggleOn : styles.toggleOff,
+                    ]}
+                    onPress={() => {
+                      const next = !gpsActive;
+                      setGpsActive(next);
+                      if (next) {
+                        apiClient.patch('/workers/me/location', { latitude: 28.6139, longitude: 77.2090 }).catch(() => {});
+                      }
+                      triggerNotification(next ? 'Location sharing active' : 'Location sharing paused');
+                    }}
+                  >
+                    <Text style={styles.toggleText}>{gpsActive ? 'ON' : 'OFF'}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Sign Out Button */}
+              <TouchableOpacity style={styles.btnSignOut} onPress={logout}>
+                <Text style={styles.btnSignOutText}>Sign Out</Text>
               </TouchableOpacity>
             </View>
           )}
         </ScrollView>
 
-        {/* Claim Skill Modal */}
+        {/* ==================================================== */}
+        {/* 4 BOTTOM NAVIGATION ITEMS ONLY                        */}
+        {/* ==================================================== */}
+        <View style={styles.bottomNav}>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => setActiveTab('home')}
+          >
+            <Text style={[styles.navIcon, activeTab === 'home' && styles.navIconActive]}>🏠</Text>
+            <Text style={[styles.navLabel, activeTab === 'home' && styles.navLabelActive]}>Home</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => setActiveTab('jobs')}
+          >
+            <Text style={[styles.navIcon, activeTab === 'jobs' && styles.navIconActive]}>💼</Text>
+            <Text style={[styles.navLabel, activeTab === 'jobs' && styles.navLabelActive]}>Jobs</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => setActiveTab('skills')}
+          >
+            <Text style={[styles.navIcon, activeTab === 'skills' && styles.navIconActive]}>⭐</Text>
+            <Text style={[styles.navLabel, activeTab === 'skills' && styles.navLabelActive]}>Skills</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => setActiveTab('profile')}
+          >
+            <Text style={[styles.navIcon, activeTab === 'profile' && styles.navIconActive]}>👤</Text>
+            <Text style={[styles.navLabel, activeTab === 'profile' && styles.navLabelActive]}>Profile</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Add Skill Modal */}
         <Modal visible={isSkillModalVisible} transparent animationType="slide">
-          <View style={styles.modalBackdrop}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>Claim Trade Skill</Text>
-              <Text style={styles.modalSubtitle}>
-                Add a skill to your Skill Passport. Your cooperative verification committee will review your claim.
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Add a Trade Skill</Text>
+              <Text style={styles.modalSub}>
+                Submit a new skill for cooperative society approval.
               </Text>
 
-              <Text style={styles.inputLabel}>Trade Skill Title</Text>
+              <Text style={styles.inputLabel}>Skill Name</Text>
               <TextInput
                 style={styles.input}
-                placeholder="e.g. Substation Transformer Servicing"
                 value={newSkillName}
                 onChangeText={setNewSkillName}
+                placeholder="e.g. Solar Panel Installation"
+                placeholderTextColor="#94a3b8"
               />
 
-              <Text style={styles.inputLabel}>Trade Category</Text>
-              <View style={styles.categoryPillRow}>
-                {['Electrical', 'Plumbing', 'Carpentry', 'HVAC', 'Masonry'].map((cat) => (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[
-                      styles.catPill,
-                      newSkillCategory === cat && styles.catPillActive,
-                    ]}
-                    onPress={() => setNewSkillCategory(cat)}
-                  >
-                    <Text
-                      style={[
-                        styles.catPillText,
-                        newSkillCategory === cat && styles.catPillTextActive,
-                      ]}
-                    >
-                      {cat}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <Text style={styles.inputLabel}>Category</Text>
+              <TextInput
+                style={styles.input}
+                value={newSkillCategory}
+                onChangeText={setNewSkillCategory}
+                placeholder="Electrical / Plumbing / HVAC"
+                placeholderTextColor="#94a3b8"
+              />
 
-              <Text style={styles.inputLabel}>Self-Assessed Proficiency</Text>
-              <View style={styles.categoryPillRow}>
-                {[
-                  ProficiencyLevel.BEGINNER,
-                  ProficiencyLevel.INTERMEDIATE,
-                  ProficiencyLevel.ADVANCED,
-                  ProficiencyLevel.EXPERT,
-                ].map((lvl) => (
-                  <TouchableOpacity
-                    key={lvl}
-                    style={[
-                      styles.catPill,
-                      newSkillLevel === lvl && styles.catPillActive,
-                    ]}
-                    onPress={() => setNewSkillLevel(lvl)}
-                  >
-                    <Text
-                      style={[
-                        styles.catPillText,
-                        newSkillLevel === lvl && styles.catPillTextActive,
-                      ]}
-                    >
-                      {lvl}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <View style={styles.modalButtonRow}>
+              <View style={styles.modalActions}>
                 <TouchableOpacity
-                  style={styles.modalCancelBtn}
+                  style={styles.btnModalCancel}
                   onPress={() => setIsSkillModalVisible(false)}
                 >
-                  <Text style={styles.modalCancelText}>Cancel</Text>
+                  <Text style={styles.btnModalCancelText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.modalSubmitBtn}
+                  style={styles.btnModalSubmit}
                   onPress={handleAddSkillClaim}
                 >
-                  <Text style={styles.modalSubmitText}>Submit Claim</Text>
+                  <Text style={styles.btnModalSubmitText}>Add Skill</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </Modal>
-
-        {/* Bottom Nav Bar */}
-        <View style={styles.navBar}>
-          <TouchableOpacity
-            style={[styles.navItem, activeTab === 'dashboard' && styles.navItemActive]}
-            onPress={() => setActiveTab('dashboard')}
-          >
-            <Text style={[styles.navIcon, activeTab === 'dashboard' && styles.navTextActive]}>📊</Text>
-            <Text style={[styles.navText, activeTab === 'dashboard' && styles.navTextActive]}>Dashboard</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.navItem, activeTab === 'skills' && styles.navItemActive]}
-            onPress={() => setActiveTab('skills')}
-          >
-            <Text style={[styles.navIcon, activeTab === 'skills' && styles.navTextActive]}>🎖️</Text>
-            <Text style={[styles.navText, activeTab === 'skills' && styles.navTextActive]}>Passport</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.navItem, activeTab === 'jobs' && styles.navItemActive]}
-            onPress={() => setActiveTab('jobs')}
-          >
-            <Text style={[styles.navIcon, activeTab === 'jobs' && styles.navTextActive]}>📋</Text>
-            <Text style={[styles.navText, activeTab === 'jobs' && styles.navTextActive]}>Assignments</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.navItem, activeTab === 'profile' && styles.navItemActive]}
-            onPress={() => setActiveTab('profile')}
-          >
-            <Text style={[styles.navIcon, activeTab === 'profile' && styles.navTextActive]}>👤</Text>
-            <Text style={[styles.navText, activeTab === 'profile' && styles.navTextActive]}>Profile</Text>
-          </TouchableOpacity>
-        </View>
       </SafeAreaView>
     );
   }
 
-  // 2. Unauthenticated Flows
+  // 2. Unauthenticated Login Screen
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.authContainer}>
-        <Text style={styles.logoTitle}>CSHRK</Text>
-        <Text style={styles.logoSubtitle}>Cooperative Worker Portal</Text>
+      <View style={styles.authBox}>
+        <View style={styles.logoBadge}>
+          <Text style={styles.logoIcon}>👷</Text>
+        </View>
+        <Text style={styles.authTitle}>Worker Portal</Text>
+        <Text style={styles.authSubtitle}>Sign in to view jobs and your schedule</Text>
 
-        {error && (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{error}</Text>
-          </View>
-        )}
+        {error && <Text style={styles.authError}>{error}</Text>}
 
-        {screen === 'login' ? (
-          <View style={styles.formBox}>
-            <Text style={styles.formTitle}>Worker Login</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={() => login(email, password)}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setScreen('register')} style={styles.linkButton}>
-              <Text style={styles.linkText}>New worker? Register account</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.formBox}>
-            <Text style={styles.formTitle}>Worker Registration</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Full Name"
-              value={fullName}
-              onChangeText={setFullName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
-            <TouchableOpacity
-              style={styles.primaryButton}
-              onPress={() => register(fullName, email, password)}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Register as Worker</Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setScreen('login')} style={styles.linkButton}>
-              <Text style={styles.linkText}>Already registered? Log in</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Email Address</Text>
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            placeholder="worker@cshrk.local"
+            placeholderTextColor="#94a3b8"
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Password</Text>
+          <TextInput
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            placeholder="••••••••"
+            placeholderTextColor="#94a3b8"
+          />
+        </View>
+
+        <TouchableOpacity
+          style={styles.btnPrimary}
+          onPress={() => login(email, password)}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text style={styles.btnPrimaryText}>Sign In to Worker App</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.btnDemo}
+          onPress={() => login('dev_worker@cshrk.local', 'DevPass123!')}
+        >
+          <Text style={styles.btnDemoText}>Use Demo Worker Account</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -837,428 +816,576 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: '#00288E',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    elevation: 3,
-  },
-  headerTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
-  headerSubtitle: { color: '#DDE1FF', fontSize: 11, marginTop: 2 },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  badgeAvailable: { backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#A7F3D0' },
-  badgeBusy: { backgroundColor: '#FFFBEB', borderWidth: 1, borderColor: '#FDE68A' },
-  badgeOffline: { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#CBD5E1' },
-  statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: 6 },
-  dotAvailable: { backgroundColor: '#059669' },
-  dotBusy: { backgroundColor: '#D97706' },
-  dotOffline: { backgroundColor: '#64748B' },
-  statusBadgeText: { fontSize: 11, fontWeight: '700', color: '#0F172A' },
-  toastBanner: {
-    backgroundColor: '#00288E',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  toastText: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
-  body: { flex: 1, padding: 16 },
-  card: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 16,
-  },
-  cardHeaderFlex: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionHeader: { fontSize: 16, fontWeight: '700', color: '#0F172A' },
-  sectionSub: { fontSize: 13, color: '#64748B', marginTop: 4, marginBottom: 14 },
-  subHeader: { fontSize: 15, fontWeight: '700', color: '#0F172A', marginBottom: 10 },
-  availabilityToggleRow: {
-    flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    padding: 4,
-    borderRadius: 8,
-  },
-  toggleBtn: {
+  container: {
     flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 6,
+    backgroundColor: '#f8fafc',
   },
-  toggleBtnActiveAvail: { backgroundColor: '#059669' },
-  toggleBtnActiveBusy: { backgroundColor: '#D97706' },
-  toggleBtnActiveOffline: { backgroundColor: '#475569' },
-  toggleBtnText: { fontSize: 12, fontWeight: '600', color: '#475569' },
-  toggleBtnTextActive: { color: '#FFFFFF', fontWeight: '700' },
-  urgentDispatchCard: {
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1.5,
-    borderColor: '#3B82F6',
-    borderRadius: 10,
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
     padding: 16,
-    marginBottom: 16,
+    paddingBottom: 40,
   },
-  urgentHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+  tabContent: {
+    gap: 14,
   },
-  urgentTag: { color: '#1E40AF', fontWeight: '800', fontSize: 12 },
-  urgentDistance: {
-    backgroundColor: '#DBEAFE',
-    color: '#1E40AF',
+  homeHeader: {
+    marginBottom: 4,
+  },
+  greetingText: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  subGreetingText: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  sectionTitle: {
     fontSize: 11,
     fontWeight: '700',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    color: '#64748b',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  statusButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+    gap: 6,
+  },
+  statusBtnAvailableActive: {
+    backgroundColor: '#16a34a',
+  },
+  statusBtnBusyActive: {
+    backgroundColor: '#d97706',
+  },
+  statusBtnOfflineActive: {
+    backgroundColor: '#475569',
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
     borderRadius: 4,
   },
-  urgentTitle: { fontSize: 17, fontWeight: '700', color: '#0F172A', marginBottom: 4 },
-  urgentCustomer: { fontSize: 14, color: '#334155', fontWeight: '600', marginBottom: 6 },
-  urgentAddress: { fontSize: 13, color: '#64748B', marginBottom: 12 },
-  urgentMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 14,
+  statusBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#334155',
   },
-  metaLabel: { fontSize: 11, color: '#64748B', marginBottom: 2 },
-  metaVal: { fontSize: 13, fontWeight: '600', color: '#0F172A' },
-  payoutVal: { fontSize: 16, fontWeight: '800', color: '#059669' },
-  actionButtonRow: { flexDirection: 'row', gap: 10 },
-  acceptButton: {
+  statusBtnTextActive: {
+    color: '#ffffff',
+  },
+  todayStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  statBox: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: '#e2e8f0',
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  statLabel: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  newJobCard: {
+    borderColor: '#f59e0b',
+    backgroundColor: '#fffbeb',
+  },
+  newJobBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  newJobBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#b45309',
+    letterSpacing: 0.5,
+  },
+  newJobTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  newJobLocation: {
+    fontSize: 13,
+    color: '#475569',
+    marginTop: 4,
+  },
+  newJobPayout: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#16a34a',
+    marginTop: 6,
+  },
+  newJobActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 14,
+  },
+  btnAccept: {
     flex: 2,
-    backgroundColor: '#059669',
+    backgroundColor: '#16a34a',
     paddingVertical: 12,
-    borderRadius: 6,
+    borderRadius: 12,
     alignItems: 'center',
   },
-  acceptButtonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
-  declineButton: {
+  btnAcceptText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  btnDecline: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
+    backgroundColor: '#e2e8f0',
     paddingVertical: 12,
-    borderRadius: 6,
+    borderRadius: 12,
     alignItems: 'center',
   },
-  declineButtonText: { color: '#64748B', fontWeight: '600', fontSize: 14 },
-  kpiGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 16,
+  btnDeclineText: {
+    color: '#475569',
+    fontWeight: '600',
+    fontSize: 14,
   },
-  kpiTile: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: '#FFFFFF',
-    padding: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+  jobTitleText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0f172a',
   },
-  kpiLabel: { fontSize: 12, color: '#64748B', fontWeight: '600' },
-  kpiValue: { fontSize: 22, fontWeight: '800', color: '#0F172A', marginVertical: 4 },
-  kpiValueSmall: { fontSize: 16, fontWeight: '800', color: '#0F172A', marginVertical: 6 },
-  kpiSub: { fontSize: 11, color: '#059669', fontWeight: '600' },
-  miniSkillItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  jobDetailText: {
+    fontSize: 13,
+    color: '#475569',
+    marginTop: 3,
+  },
+  btnViewJob: {
+    marginTop: 12,
+    backgroundColor: '#0284c7',
     paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  skillItemName: { fontSize: 14, fontWeight: '600', color: '#0F172A' },
-  skillItemCat: { fontSize: 12, color: '#64748B', marginTop: 2 },
-  verifiedTag: {
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#A7F3D0',
-  },
-  verifiedTagText: { fontSize: 11, fontWeight: '700', color: '#059669' },
-  pendingTag: {
-    backgroundColor: '#FFFBEB',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-  },
-  pendingTagText: { fontSize: 11, fontWeight: '700', color: '#B45309' },
-  passportBannerCard: {
-    backgroundColor: '#00288E',
-    padding: 18,
     borderRadius: 10,
-    marginBottom: 18,
-  },
-  passportBannerTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
-  passportBannerSub: { color: '#DDE1FF', fontSize: 12, marginTop: 4, lineHeight: 18 },
-  passportStatsRow: { flexDirection: 'row', marginTop: 16, gap: 12 },
-  passportStat: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    padding: 10,
-    borderRadius: 6,
     alignItems: 'center',
   },
-  passportStatNum: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
-  passportStatLabel: { color: '#DDE1FF', fontSize: 10, marginTop: 2 },
-  actionHeaderRow: {
+  btnViewJobText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  pillRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  pill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#e2e8f0',
+  },
+  pillActive: {
+    backgroundColor: '#0f172a',
+  },
+  pillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  pillTextActive: {
+    color: '#ffffff',
+  },
+  jobHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  jobPayoutTag: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#16a34a',
+  },
+  jobStatusRow: {
+    marginTop: 10,
+    alignItems: 'flex-start',
+  },
+  jobStatusBadge: {
+    fontSize: 11,
+    fontWeight: '700',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  badgeActive: {
+    backgroundColor: '#e0f2fe',
+    color: '#0369a1',
+  },
+  badgeDone: {
+    backgroundColor: '#f1f5f9',
+    color: '#64748b',
+  },
+  skillsHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
   },
-  claimSkillBtn: {
-    backgroundColor: '#00288E',
-    paddingHorizontal: 12,
+  btnAddSkill: {
+    backgroundColor: '#0284c7',
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: 10,
   },
-  claimSkillBtnText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
-  skillFullCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 12,
+  btnAddSkillText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 13,
   },
-  skillCardTop: { flexDirection: 'row', justifyContent: 'space-between' },
-  skillCardTitle: { fontSize: 15, fontWeight: '700', color: '#0F172A' },
-  skillCardCode: { fontSize: 12, color: '#64748B', marginTop: 2 },
-  levelBadge: {
-    backgroundColor: '#EFF6FF',
+  skillRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  skillName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  skillSub: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  badgeWrapper: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
-    height: 24,
-  },
-  levelBadgeText: { fontSize: 11, fontWeight: '700', color: '#1E40AF' },
-  skillCardDesc: { fontSize: 13, color: '#475569', marginVertical: 10, lineHeight: 18 },
-  skillCardBottom: { borderTopWidth: 1, borderTopColor: '#F1F5F9', paddingTop: 10 },
-  verifiedBadgeFull: {
-    backgroundColor: '#ECFDF5',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 4,
-  },
-  verifiedBadgeText: { fontSize: 12, color: '#059669', fontWeight: '700' },
-  pendingBadgeFull: {
-    backgroundColor: '#FFFBEB',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 4,
-  },
-  pendingBadgeText: { fontSize: 12, color: '#B45309', fontWeight: '700' },
-  certCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 14,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 10,
   },
-  certTitle: { fontSize: 14, fontWeight: '700', color: '#0F172A' },
-  certIssuer: { fontSize: 12, color: '#64748B', marginTop: 3 },
-  certStatus: { fontSize: 12, color: '#059669', fontWeight: '600', marginTop: 6 },
-  jobCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 12,
+  badgeVerified: {
+    backgroundColor: '#dcfce7',
   },
-  jobCardHistory: {
-    backgroundColor: '#F8FAFC',
-    padding: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    marginBottom: 10,
+  badgePending: {
+    backgroundColor: '#fef3c7',
   },
-  jobStatusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  activeTag: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
-  activeTagText: { fontSize: 11, fontWeight: '700', color: '#1D4ED8' },
-  completedTag: {
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 4,
+  badgeTextVerified: {
+    color: '#15803d',
   },
-  completedTagText: { fontSize: 11, fontWeight: '700', color: '#059669' },
-  jobPayout: { fontSize: 16, fontWeight: '800', color: '#059669' },
-  historyPayout: { fontSize: 14, fontWeight: '700', color: '#475569' },
-  jobTitle: { fontSize: 15, fontWeight: '700', color: '#0F172A' },
-  jobCustomer: { fontSize: 13, color: '#334155', marginTop: 2 },
-  jobAddress: { fontSize: 12, color: '#64748B', marginTop: 6 },
-  jobTime: { fontSize: 12, color: '#1E40AF', fontWeight: '600', marginTop: 6 },
-  emptyCard: {
-    backgroundColor: '#FFFFFF',
-    padding: 24,
-    borderRadius: 8,
+  badgeTextPending: {
+    color: '#b45309',
+  },
+  profileRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    gap: 14,
   },
-  emptyText: { color: '#64748B', fontSize: 13 },
-  profileAvatarRow: { flexDirection: 'row', alignItems: 'center' },
   avatarCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#00288E',
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#e0f2fe',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarInitials: { color: '#FFFFFF', fontSize: 20, fontWeight: '700' },
-  profileName: { fontSize: 17, fontWeight: '700', color: '#0F172A' },
-  profileEmail: { fontSize: 13, color: '#64748B', marginTop: 2 },
-  profileRole: { fontSize: 12, color: '#059669', fontWeight: '600', marginTop: 2 },
+  avatarLetter: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#0369a1',
+  },
+  profileName: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  profileRole: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  profileId: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginTop: 1,
+    fontFamily: 'monospace',
+  },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  detailLabel: { fontSize: 13, color: '#64748B' },
-  detailVal: { fontSize: 13, fontWeight: '600', color: '#0F172A' },
-  settingToggleRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
-  settingLabel: { fontSize: 14, fontWeight: '600', color: '#0F172A' },
-  settingSub: { fontSize: 12, color: '#64748B', marginTop: 2 },
-  toggleSwitch: {
-    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 14,
   },
-  toggleSwitchOn: { backgroundColor: '#059669' },
-  toggleSwitchOff: { backgroundColor: '#94A3B8' },
-  toggleSwitchText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
-  navBar: {
+  detailKey: {
+    fontSize: 13,
+    color: '#64748b',
+  },
+  detailVal: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  menuRow: {
     flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 8,
-  },
-  navItem: { flex: 1, alignItems: 'center', paddingVertical: 4 },
-  navItemActive: { borderTopWidth: 2, borderTopColor: '#00288E', marginTop: -8, paddingTop: 6 },
-  navIcon: { fontSize: 16, marginBottom: 2 },
-  navText: { fontSize: 11, color: '#64748B', fontWeight: '600' },
-  navTextActive: { color: '#00288E', fontWeight: '700' },
-  authContainer: { flex: 1, justifyContent: 'center', padding: 24 },
-  logoTitle: { fontSize: 32, fontWeight: '800', color: '#00288E', textAlign: 'center' },
-  logoSubtitle: { fontSize: 14, color: '#64748B', textAlign: 'center', marginBottom: 28 },
-  primaryButton: {
-    backgroundColor: '#00288E',
-    paddingVertical: 14,
-    borderRadius: 6,
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    paddingVertical: 10,
   },
-  logoutButton: {
-    backgroundColor: '#DC2626',
-    paddingVertical: 14,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  buttonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 15 },
-  formBox: { backgroundColor: '#FFFFFF', padding: 20, borderRadius: 8, elevation: 2, borderWidth: 1, borderColor: '#E2E8F0' },
-  formTitle: { fontSize: 18, fontWeight: '700', color: '#0F172A', marginBottom: 16 },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 6,
-    padding: 10,
-    marginBottom: 12,
+  menuLabel: {
     fontSize: 14,
-    color: '#0F172A',
+    fontWeight: '600',
+    color: '#0f172a',
   },
-  linkButton: { alignItems: 'center', marginTop: 12 },
-  linkText: { color: '#00288E', fontSize: 13, fontWeight: '600' },
-  errorBox: {
-    backgroundColor: '#FEE2E2',
-    borderColor: '#EF4444',
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 6,
-    marginBottom: 16,
+  menuArrow: {
+    fontSize: 14,
+    color: '#94a3b8',
   },
-  errorText: { color: '#991B1B', fontSize: 13 },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    justifyContent: 'flex-end',
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  modalContainer: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 20,
-  },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#0F172A' },
-  modalSubtitle: { fontSize: 13, color: '#64748B', marginTop: 4, marginBottom: 16 },
-  inputLabel: { fontSize: 13, fontWeight: '600', color: '#334155', marginBottom: 6 },
-  categoryPillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
-  catPill: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 12,
+  toggleBtn: {
+    paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 16,
   },
-  catPillActive: { backgroundColor: '#00288E' },
-  catPillText: { fontSize: 12, color: '#475569', fontWeight: '600' },
-  catPillTextActive: { color: '#FFFFFF' },
-  modalButtonRow: { flexDirection: 'row', gap: 12, marginTop: 12 },
-  modalCancelBtn: {
+  toggleOn: {
+    backgroundColor: '#16a34a',
+  },
+  toggleOff: {
+    backgroundColor: '#94a3b8',
+  },
+  toggleText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  btnSignOut: {
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#fee2e2',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  btnSignOutText: {
+    color: '#dc2626',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    paddingVertical: 8,
+    paddingBottom: 12,
+  },
+  navItem: {
     flex: 1,
-    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navIcon: {
+    fontSize: 20,
+    opacity: 0.6,
+  },
+  navIconActive: {
+    opacity: 1,
+  },
+  navLabel: {
+    fontSize: 11,
+    color: '#64748b',
+    marginTop: 3,
+    fontWeight: '500',
+  },
+  navLabelActive: {
+    color: '#0284c7',
+    fontWeight: '700',
+  },
+  toast: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    right: 20,
+    backgroundColor: '#0f172a',
+    padding: 12,
+    borderRadius: 12,
+    zIndex: 99,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  toastText: {
+    color: '#ffffff',
+    fontSize: 13,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  modalSub: {
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#334155',
+    marginBottom: 6,
+    marginTop: 10,
+  },
+  input: {
+    height: 44,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
-    borderRadius: 6,
+    borderColor: '#cbd5e1',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    color: '#0f172a',
+    backgroundColor: '#f8fafc',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 20,
+  },
+  btnModalCancel: {
+    flex: 1,
+    paddingVertical: 10,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 10,
     alignItems: 'center',
   },
-  modalCancelText: { color: '#475569', fontWeight: '600' },
-  modalSubmitBtn: {
-    flex: 2,
-    backgroundColor: '#00288E',
+  btnModalCancelText: {
+    color: '#475569',
+    fontWeight: '600',
+  },
+  btnModalSubmit: {
+    flex: 1,
+    paddingVertical: 10,
+    backgroundColor: '#0284c7',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  btnModalSubmitText: {
+    color: '#ffffff',
+    fontWeight: '600',
+  },
+  authBox: {
+    flex: 1,
+    padding: 24,
+    justifyContent: 'center',
+  },
+  logoBadge: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#e0f2fe',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  logoIcon: {
+    fontSize: 30,
+  },
+  authTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#0f172a',
+    textAlign: 'center',
+  },
+  authSubtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    textAlign: 'center',
+    marginTop: 4,
+    marginBottom: 24,
+  },
+  authError: {
+    color: '#dc2626',
+    backgroundColor: '#fee2e2',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 14,
+    textAlign: 'center',
+    fontSize: 13,
+  },
+  inputGroup: {
+    marginBottom: 14,
+  },
+  btnPrimary: {
+    backgroundColor: '#0284c7',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  btnPrimaryText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  btnDemo: {
+    marginTop: 12,
     paddingVertical: 12,
-    borderRadius: 6,
     alignItems: 'center',
   },
-  modalSubmitText: { color: '#FFFFFF', fontWeight: '700' },
+  btnDemoText: {
+    color: '#0284c7',
+    fontSize: 13,
+    fontWeight: '600',
+  },
 });

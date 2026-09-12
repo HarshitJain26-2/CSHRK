@@ -1,18 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useWorkforce } from '../context/WorkforceContext';
 import { MASTER_AVATARS } from '../data/workforceData';
 
 export const WorkerProfileView: React.FC = () => {
-  const { selectedWorkerId, workers, navigate, openConfirmDialog, deactivateWorker, addToast } = useWorkforce();
+  const { selectedWorkerId, workers, navigate, openConfirmDialog, deactivateWorker } = useWorkforce();
 
-  // Find currently selected worker or default to Carlos Mendez WKR-8042
   const worker = workers.find((w) => w.id === selectedWorkerId) || workers[0];
-  const [activeTab, setActiveTab] = useState<'overview' | 'skills' | 'certs' | 'activity'>('overview');
 
   const handleDeactivate = () => {
     openConfirmDialog({
       title: `Stand-down Worker ${worker.fullName}?`,
-      description: `Worker ${worker.id} will be placed into Stand-down / Inactive status. Their active shift assignments and cooperative dispatch permissions will be temporarily paused.`,
+      description: `Worker ${worker.id} will be placed into Stand-down / Inactive status. Their shift assignments will be temporarily paused.`,
       confirmLabel: 'Confirm Stand-down',
       isDestructive: true,
       onConfirm: () => {
@@ -21,374 +19,289 @@ export const WorkerProfileView: React.FC = () => {
     });
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-900">
+            <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+            Active
+          </span>
+        );
+      case 'onboarding':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900">
+            <span className="w-2 h-2 rounded-full bg-amber-600"></span>
+            Onboarding
+          </span>
+        );
+      case 'inactive':
+      default:
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-surface-container-high text-on-surface-variant">
+            <span className="w-2 h-2 rounded-full bg-outline"></span>
+            Inactive / Stand-down
+          </span>
+        );
+    }
+  };
+
   return (
-    <div className="flex flex-col w-full pb-24">
-      {/* Sub-Header Bar with Back Button */}
-      <div className="px-space-md py-3 bg-surface-container-lowest border-b border-surface-container-high flex items-center justify-between">
+    <div className="flex flex-col w-full px-space-md py-space-sm space-y-space-md pb-24 max-w-5xl mx-auto">
+      {/* Back button */}
+      <div className="flex items-center justify-between">
         <button
           onClick={() => navigate('workers')}
-          className="flex items-center gap-1.5 text-secondary hover:text-on-surface font-label-md text-label-md transition-colors"
+          className="flex items-center gap-1.5 text-secondary hover:text-on-surface font-label-md text-sm font-medium transition-colors"
         >
           <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-          <span>Back to Workers Directory</span>
+          <span>Back to Workers</span>
         </button>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              addToast('info', 'Profile Link Copied', `Direct shareable URL for ${worker.id} copied to clipboard.`);
-            }}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-surface-container transition-colors"
-            title="Share Profile"
-          >
-            <span className="material-symbols-outlined text-[18px]">share</span>
-          </button>
-          <button
-            onClick={handleDeactivate}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-error hover:bg-error-container/30 transition-colors"
-            title="Deactivate Worker"
-          >
-            <span className="material-symbols-outlined text-[18px]">block</span>
-          </button>
-        </div>
       </div>
 
-      {/* Profile Header Hero Surface */}
-      <div className="px-space-md pt-space-md pb-space-lg flex flex-col gap-space-md bg-surface-container-low border-b border-surface-container-high shadow-xs">
-        {/* Top Identity Row */}
-        <div className="flex items-start gap-space-md">
-          <div className="relative shrink-0">
-            <img
-              className="w-20 h-20 rounded-full object-cover shadow-sm ring-2 ring-surface-container-lowest"
-              src={worker.id === 'WKR-8042' ? MASTER_AVATARS.CARLOS_PROFILE : worker.avatar}
-              alt={worker.fullName}
-            />
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-sm">
-              <span className="material-symbols-outlined text-[16px] text-tertiary-fixed-dim fill-1">
-                verified
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-center justify-between gap-1">
-              <h2 className="font-headline-md text-headline-md text-on-surface truncate">
+      {/* Top Profile Hero Card */}
+      <div className="p-6 rounded-2xl bg-surface-container-lowest border border-surface-container-high shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+        <div className="flex items-center gap-4 min-w-0">
+          <img
+            src={worker.id === 'WKR-8042' ? MASTER_AVATARS.CARLOS_PROFILE : worker.avatar}
+            alt={worker.fullName}
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-surface-container-high shadow-xs shrink-0"
+          />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="font-headline-lg text-headline-lg font-bold text-on-surface truncate">
                 {worker.fullName}
-              </h2>
-              <span className="font-code-sm text-code-sm text-secondary bg-surface-container px-2 py-0.5 rounded-lg shrink-0">
+              </h1>
+              <span className="text-xs text-on-surface-variant bg-surface-container px-2 py-0.5 rounded font-mono">
                 {worker.id}
               </span>
             </div>
-            <p className="font-body-md text-body-md text-on-surface-variant line-clamp-1 mt-0.5">
+            <p className="text-sm sm:text-base text-on-surface-variant mt-0.5 font-medium">
               {worker.role}
             </p>
-            <div className="flex items-center gap-1.5 mt-2 text-secondary">
-              <span className="material-symbols-outlined text-[16px]">calendar_today</span>
-              <span className="font-body-sm text-body-sm text-secondary">
-                Joined {worker.joinedDate} <span className="text-on-surface-variant font-label-sm">({worker.yearsOfService})</span>
+            <div className="mt-2.5 flex items-center gap-2">
+              {getStatusBadge(worker.status)}
+              <span className="text-xs text-on-surface-variant">
+                Member of {worker.cooperativeName}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Status Chips Band */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-1">
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 font-label-sm font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-            {worker.status === 'active' ? 'Active' : worker.status}
-          </span>
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-surface-container-highest text-on-surface-variant font-label-sm">
-            <span className="material-symbols-outlined text-[13px]">schedule</span>
-            {worker.employmentType}
-          </span>
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-secondary-container text-on-secondary-fixed font-label-sm">
-            <span className="material-symbols-outlined text-[13px]">shield_person</span>
-            Verified Member
-          </span>
-        </div>
-
-        {/* Direct Fast-Contact Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-xs pt-1">
-          <a
-            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-surface-container-lowest text-primary hover:bg-surface-container transition-colors shadow-xs"
-            href={`tel:${worker.phone}`}
-          >
-            <span className="material-symbols-outlined text-[18px]">call</span>
-            <span className="font-label-md text-label-md truncate">{worker.phone}</span>
-          </a>
-          <a
-            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-surface-container-lowest text-primary hover:bg-surface-container transition-colors shadow-xs"
-            href={`mailto:${worker.email}`}
-          >
-            <span className="material-symbols-outlined text-[18px]">mail</span>
-            <span className="font-label-md text-label-md truncate">{worker.email}</span>
-          </a>
-        </div>
-
-        {/* Main Header Action CTA Strip */}
-        <div className="flex items-center gap-2 pt-1">
+        {/* Primary Action Button */}
+        <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={() => navigate('edit-worker', worker.id)}
-            className="flex-1 h-10 px-4 rounded-xl bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-1.5 shadow-sm hover:bg-primary-container active:opacity-90 transition-colors"
+            className="flex items-center gap-2 bg-primary text-on-primary font-label-md text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm hover:bg-primary-container active:opacity-90 transition-all"
           >
             <span className="material-symbols-outlined text-[18px]">edit</span>
-            <span>Edit Profile</span>
-          </button>
-          <button
-            onClick={handleDeactivate}
-            className="flex-1 h-10 px-3 rounded-xl bg-surface-container-lowest text-on-surface font-label-md text-label-md flex items-center justify-center gap-1.5 shadow-xs hover:bg-surface-container transition-colors"
-          >
-            <span className="material-symbols-outlined text-[18px] text-secondary">published_with_changes</span>
-            <span>Change Status</span>
+            <span>Edit Worker</span>
           </button>
         </div>
       </div>
 
-      {/* Horizontal Navigation Tabs */}
-      <div className="w-full bg-surface-container-lowest border-b border-surface-container-high sticky top-16 z-20">
-        <div className="flex items-center px-space-md gap-4 overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`py-3 font-label-md text-label-md border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'overview'
-                ? 'border-primary text-primary font-semibold'
-                : 'border-transparent text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            Overview & Society
-          </button>
-          <button
-            onClick={() => setActiveTab('skills')}
-            className={`py-3 font-label-md text-label-md border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'skills'
-                ? 'border-primary text-primary font-semibold'
-                : 'border-transparent text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            Skills Matrix ({worker.skills.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('certs')}
-            className={`py-3 font-label-md text-label-md border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'certs'
-                ? 'border-primary text-primary font-semibold'
-                : 'border-transparent text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            Certifications ({worker.certifications.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('activity')}
-            className={`py-3 font-label-md text-label-md border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'activity'
-                ? 'border-primary text-primary font-semibold'
-                : 'border-transparent text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            Audits & History
-          </button>
+      {/* 2-Column Grid of Clear Information Sections */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Basic Information Card */}
+        <div className="p-5 rounded-2xl bg-surface-container-lowest border border-surface-container-high shadow-xs space-y-4">
+          <div className="flex items-center gap-2 border-b border-surface-container pb-3">
+            <span className="material-symbols-outlined text-primary text-[20px]">badge</span>
+            <h2 className="font-headline-sm text-base font-bold text-on-surface">
+              Basic Information
+            </h2>
+          </div>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Full Legal Name</span>
+              <span className="font-medium text-on-surface">{worker.fullName}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Worker ID</span>
+              <span className="font-mono text-on-surface font-medium">{worker.id}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Joined Date</span>
+              <span className="font-medium text-on-surface">{worker.joinedDate}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Years of Service</span>
+              <span className="font-medium text-on-surface">{worker.yearsOfService}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Information Card */}
+        <div className="p-5 rounded-2xl bg-surface-container-lowest border border-surface-container-high shadow-xs space-y-4">
+          <div className="flex items-center gap-2 border-b border-surface-container pb-3">
+            <span className="material-symbols-outlined text-primary text-[20px]">contact_phone</span>
+            <h2 className="font-headline-sm text-base font-bold text-on-surface">
+              Contact Information
+            </h2>
+          </div>
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-on-surface-variant">Phone Number</span>
+              <a
+                href={`tel:${worker.phone}`}
+                className="font-medium text-primary hover:underline flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-[16px]">call</span>
+                <span>{worker.phone}</span>
+              </a>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-on-surface-variant">Email Address</span>
+              <a
+                href={`mailto:${worker.email}`}
+                className="font-medium text-primary hover:underline flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-[16px]">mail</span>
+                <span>{worker.email}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Work Information Card */}
+        <div className="p-5 rounded-2xl bg-surface-container-lowest border border-surface-container-high shadow-xs space-y-4">
+          <div className="flex items-center gap-2 border-b border-surface-container pb-3">
+            <span className="material-symbols-outlined text-primary text-[20px]">work</span>
+            <h2 className="font-headline-sm text-base font-bold text-on-surface">
+              Work Information
+            </h2>
+          </div>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Trade / Role</span>
+              <span className="font-medium text-on-surface">{worker.role}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Employment Type</span>
+              <span className="font-medium text-on-surface">{worker.employmentType}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Worker Status</span>
+              <span>{getStatusBadge(worker.status)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Cooperative Card */}
+        <div className="p-5 rounded-2xl bg-surface-container-lowest border border-surface-container-high shadow-xs space-y-4">
+          <div className="flex items-center gap-2 border-b border-surface-container pb-3">
+            <span className="material-symbols-outlined text-primary text-[20px]">account_balance</span>
+            <h2 className="font-headline-sm text-base font-bold text-on-surface">
+              Cooperative Society
+            </h2>
+          </div>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Society Name</span>
+              <span className="font-medium text-on-surface">{worker.cooperativeName}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Society ID</span>
+              <span className="font-mono text-on-surface">{worker.cooperativeId}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">Membership Status</span>
+              <span className="text-emerald-800 font-semibold">Active Registered Member</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Tab Content Section */}
-      <div className="p-space-md space-y-space-md">
-        {activeTab === 'overview' && (
-          <div className="space-y-space-md">
-            {/* Cooperative Affiliation Card */}
-            <div className="p-space-md rounded-xl bg-surface-container-lowest shadow-sm border border-surface-container-high space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[20px] text-primary">account_balance</span>
-                  <span className="font-headline-sm text-headline-sm text-on-surface">
-                    Cooperative Affiliation
-                  </span>
-                </div>
-                <button
-                  onClick={() => navigate('cooperatives')}
-                  className="text-primary font-label-sm text-label-sm hover:underline"
-                >
-                  View Society
-                </button>
-              </div>
-
-              <div className="p-3 rounded-lg bg-surface-container-low flex items-center justify-between">
-                <div className="flex flex-col">
-                  <span className="font-label-md text-label-md text-on-surface font-semibold">
-                    {worker.cooperativeName}
-                  </span>
-                  <span className="text-[12px] font-body-sm text-on-surface-variant">
-                    Pacific Northwest Regional Federation • ID: REG-88214
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 text-tertiary font-label-md text-label-md">
-                  <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                  <span>98.4%</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-[12px] font-body-sm text-on-surface-variant pt-1">
-                <div>
-                  <span className="font-semibold text-on-surface">Elected Delegate:</span> Sarah Jenkins
-                </div>
-                <div>
-                  <span className="font-semibold text-on-surface">Charter Status:</span> Fully Compliant
-                </div>
-                <div>
-                  <span className="font-semibold text-on-surface">Shift Assignment:</span> Sector A Morning Run
-                </div>
-                <div>
-                  <span className="font-semibold text-on-surface">Incident History:</span> 0 Breaches (Clean)
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Summary of Top Competencies */}
-            <div className="p-space-md rounded-xl bg-surface-container-lowest shadow-sm border border-surface-container-high space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-headline-sm text-headline-sm text-on-surface">Core Competencies</span>
-                <button
-                  onClick={() => setActiveTab('skills')}
-                  className="text-primary font-label-sm text-label-sm hover:underline"
-                >
-                  Full Matrix
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                {worker.skills.map((skill) => (
-                  <div
-                    key={skill.name}
-                    className="flex items-center justify-between p-2.5 rounded-lg bg-surface-container-low"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-primary"></span>
-                      <span className="font-body-md text-body-md text-on-surface font-medium">
-                        {skill.name}
-                      </span>
-                    </div>
-                    <span className="px-2 py-0.5 rounded text-[11px] font-label-sm font-semibold bg-primary text-on-primary">
-                      {skill.level}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {/* Skills Section Card */}
+      <div className="p-5 rounded-2xl bg-surface-container-lowest border border-surface-container-high shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-surface-container pb-3">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary text-[20px]">psychology</span>
+            <h2 className="font-headline-sm text-base font-bold text-on-surface">
+              Skills ({worker.skills.length})
+            </h2>
           </div>
-        )}
+          <span className="text-xs text-on-surface-variant">Validated competencies</span>
+        </div>
 
-        {activeTab === 'skills' && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="font-headline-sm text-headline-sm text-on-surface">Verified Skills Portfolio</span>
-              <button
-                onClick={() => navigate('skills')}
-                className="px-3 py-1.5 rounded-xl bg-primary text-on-primary font-label-sm text-label-sm hover:bg-primary-container"
+        {worker.skills.length === 0 ? (
+          <p className="text-sm text-on-surface-variant py-2">No skills registered for this worker.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {worker.skills.map((skill, i) => (
+              <div
+                key={i}
+                className="p-3.5 rounded-xl bg-surface-container-low border border-surface-container-high flex items-center justify-between"
               >
-                + Map New Skill
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {worker.skills.map((skill) => (
-                <div
-                  key={skill.name}
-                  className="p-space-md rounded-xl bg-surface-container-lowest shadow-sm border border-surface-container-high space-y-2"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex flex-col">
-                      <span className="font-headline-sm text-headline-sm text-on-surface">{skill.name}</span>
-                      <span className="text-[12px] font-body-sm text-on-surface-variant">
-                        Competency Code: {skill.skillId} • Supervisor Signed Off
-                      </span>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-lg text-[12px] font-label-sm font-bold bg-primary text-on-primary">
-                      {skill.level} Proficiency
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-[11px] font-label-sm text-tertiary">
-                    <span className="material-symbols-outlined text-[14px]">verified</span>
-                    <span>Audited against enterprise rubric level</span>
+                <div>
+                  <div className="font-semibold text-on-surface text-sm">{skill.name}</div>
+                  <div className="text-xs text-on-surface-variant mt-0.5">
+                    Level: <span className="font-medium text-on-surface">{skill.level}</span>
                   </div>
                 </div>
-              ))}
-            </div>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                  <span className="material-symbols-outlined text-[14px]">verified</span>
+                  Verified
+                </span>
+              </div>
+            ))}
           </div>
         )}
+      </div>
 
-        {activeTab === 'certs' && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="font-headline-sm text-headline-sm text-on-surface">Registered Credentials</span>
-              <button
-                onClick={() => navigate('add-cert')}
-                className="px-3 py-1.5 rounded-xl bg-primary text-on-primary font-label-sm text-label-sm hover:bg-primary-container"
+      {/* Certifications Section Card */}
+      <div className="p-5 rounded-2xl bg-surface-container-lowest border border-surface-container-high shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-surface-container pb-3">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary text-[20px]">workspace_premium</span>
+            <h2 className="font-headline-sm text-base font-bold text-on-surface">
+              Certifications ({worker.certifications.length})
+            </h2>
+          </div>
+          <span className="text-xs text-on-surface-variant">Safety & trade qualifications</span>
+        </div>
+
+        {worker.certifications.length === 0 ? (
+          <p className="text-sm text-on-surface-variant py-2">No certifications currently registered.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {worker.certifications.map((cert, i) => (
+              <div
+                key={i}
+                className="p-3.5 rounded-xl bg-surface-container-low border border-surface-container-high flex items-center justify-between"
               >
-                + Add Credential
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {worker.certifications.map((cert) => (
-                <div
-                  key={cert.name}
-                  className="p-space-md rounded-xl bg-surface-container-lowest shadow-sm border border-surface-container-high space-y-2"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex flex-col">
-                      <span className="font-headline-sm text-headline-sm text-on-surface">{cert.name}</span>
-                      <span className="text-[12px] font-body-sm text-on-surface-variant">
-                        Issuing Body: {cert.issuer}
-                      </span>
-                    </div>
-                    <span
-                      className={`px-2 py-0.5 rounded text-[11px] font-label-sm font-semibold ${
-                        cert.status === 'valid'
-                          ? 'bg-tertiary-fixed text-on-tertiary-fixed'
-                          : cert.status === 'expiring'
-                          ? 'bg-error text-on-error'
-                          : 'bg-primary-fixed text-on-primary-fixed'
-                      }`}
-                    >
-                      {cert.status.toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[12px] font-body-sm text-on-surface-variant pt-1 border-t border-surface-container-low">
-                    <span>Valid until: {cert.expiryDate}</span>
-                    <button
-                      onClick={() => navigate('certs')}
-                      className="text-primary font-label-sm text-label-sm hover:underline"
-                    >
-                      Inspect Verification Record
-                    </button>
+                <div>
+                  <div className="font-semibold text-on-surface text-sm">{cert.name}</div>
+                  <div className="text-xs text-on-surface-variant mt-0.5">
+                    Expires: <span className="font-medium text-on-surface">{cert.expiryDate}</span>
                   </div>
                 </div>
-              ))}
-            </div>
+                <span
+                  className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded ${
+                    cert.status === 'valid'
+                      ? 'text-emerald-800 bg-emerald-100'
+                      : cert.status === 'expiring'
+                      ? 'text-amber-800 bg-amber-100'
+                      : 'text-error bg-error/10'
+                  }`}
+                >
+                  {cert.status === 'valid' ? 'Valid' : cert.status === 'expiring' ? 'Expiring Soon' : cert.status}
+                </span>
+              </div>
+            ))}
           </div>
         )}
+      </div>
 
-        {activeTab === 'activity' && (
-          <div className="p-space-md rounded-xl bg-surface-container-lowest shadow-sm border border-surface-container-high space-y-4">
-            <span className="font-headline-sm text-headline-sm text-on-surface">Audit & Shift History</span>
-            <div className="space-y-3 border-l-2 border-surface-container-high pl-4 ml-2">
-              <div className="relative">
-                <span className="w-2.5 h-2.5 rounded-full bg-primary absolute -left-[21px] top-1"></span>
-                <div className="font-label-md text-label-md text-on-surface">Annual Compliance Review Completed</div>
-                <div className="text-[11px] font-body-sm text-on-surface-variant">Sep 01, 2026 • Auditor Sarah Jenkins</div>
-              </div>
-              <div className="relative">
-                <span className="w-2.5 h-2.5 rounded-full bg-tertiary absolute -left-[21px] top-1"></span>
-                <div className="font-label-md text-label-md text-on-surface">Agro-Tech II Machinery License Verified</div>
-                <div className="text-[11px] font-body-sm text-on-surface-variant">Mar 20, 2024 • State Agricultural Board</div>
-              </div>
-              <div className="relative">
-                <span className="w-2.5 h-2.5 rounded-full bg-outline absolute -left-[21px] top-1"></span>
-                <div className="font-label-md text-label-md text-on-surface">Enrolled in Apex Agro Cooperative</div>
-                <div className="text-[11px] font-body-sm text-on-surface-variant">Mar 14, 2021 • Charter Member Onboarding</div>
-              </div>
-            </div>
-          </div>
-        )}
+      {/* Stand-down Worker Action */}
+      <div className="flex justify-end pt-2">
+        <button
+          type="button"
+          onClick={handleDeactivate}
+          className="px-4 py-2 rounded-xl text-xs font-semibold text-error hover:bg-error/10 border border-error/20 transition-colors flex items-center gap-1.5"
+        >
+          <span className="material-symbols-outlined text-[16px]">block</span>
+          <span>Stand-down Worker</span>
+        </button>
       </div>
     </div>
   );

@@ -2,405 +2,406 @@ import React, { useState } from 'react';
 import { useWorkforce } from '../context/WorkforceContext';
 
 export const WorkerOnboardingView: React.FC = () => {
-  const { navigate, addWorker, cooperatives } = useWorkforce();
+  const { navigate, addWorker, cooperatives, setSelectedWorkerId } = useWorkforce();
+
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 5;
 
   // Form State
-  const [fullName, setFullName] = useState('Carlos Mendez');
-  const [role, setRole] = useState('Senior Agronomist & Machine Specialist');
-  const [selectedCoop, setSelectedCoop] = useState('COOP-01');
-  const [employmentType, setEmploymentType] = useState<'Full-Time' | 'Contract' | 'In Onboarding'>('In Onboarding');
-  const [email, setEmail] = useState('carlos.mendez@apexagro.org');
-  const [phone, setPhone] = useState('+1 (555) 382-9104');
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('General Tradesperson');
+  const [employmentType, setEmploymentType] = useState<'Full-Time' | 'Contract'>('Full-Time');
+  const [cooperativeId, setCooperativeId] = useState(cooperatives[0]?.id || 'COOP-01');
+  const [skillName, setSkillName] = useState('Industrial Electrical');
+  const [skillLevel, setSkillLevel] = useState<'Beginner' | 'Intermediate' | 'Advanced' | 'Expert'>('Intermediate');
+  const [certName, setCertName] = useState('Occupational Health & Safety');
 
-  // Selected Skills in Step 5
-  const [skillsList, setSkillsList] = useState([
-    {
-      id: 'SKL-1042',
-      name: 'Tractor Operations & Telematics',
-      category: 'Agricultural Machinery • Tier A Fleet',
-      icon: 'agriculture',
-      level: 'expert' as 'beginner' | 'intermediate' | 'advanced' | 'expert',
-      experience: '5',
-      tag: 'Telemetry Logged',
-    },
-    {
-      id: 'SKL-1088',
-      name: 'Soil Chemical Composition Analysis',
-      category: 'Agronomy & Soil Science • Lab Grade',
-      icon: 'science',
-      level: 'advanced' as 'beginner' | 'intermediate' | 'advanced' | 'expert',
-      experience: '3',
-      tag: 'Certified Lab Spec',
-    },
-  ]);
+  // Success State
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [createdWorkerId, setCreatedWorkerId] = useState<string>('');
 
-  const [activeCategoryFilter, setActiveCategoryFilter] = useState('All');
-  const [skillSearch, setSkillSearch] = useState('');
+  const selectedCoop = cooperatives.find((c) => c.id === cooperativeId) || cooperatives[0];
 
-  const handleRemoveSkill = (id: string) => {
-    setSkillsList((prev) => prev.filter((s) => s.id !== id));
+  const handleNext = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep((prev) => prev + 1);
+    }
   };
 
-  const handleCompleteOnboarding = (e: React.FormEvent) => {
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep((prev) => prev - 1);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const newId = 'WKR-' + Math.floor(1000 + Math.random() * 9000);
+    setCreatedWorkerId(newId);
+
     addWorker({
-      fullName,
+      id: newId,
+      fullName: fullName.trim() || 'New Worker',
+      phone: phone.trim() || '+1 (555) 123-4567',
+      email: email.trim() || `${newId.toLowerCase()}@cshrk.local`,
       role,
-      cooperativeId: selectedCoop,
       employmentType,
-      email,
-      phone,
-      skills: skillsList.map((s) => ({
-        skillId: s.id,
-        name: s.name,
-        level: s.level === 'expert' ? 'Expert' : s.level === 'advanced' ? 'Adv' : s.level === 'intermediate' ? 'Int' : 'Beg',
-        verified: true,
-      })),
+      cooperativeId: selectedCoop.id,
+      cooperativeName: selectedCoop.name,
+      status: 'onboarding',
+      joinedDate: 'Today',
+      yearsOfService: '< 1 Yr',
+      skills: [
+        {
+          skillId: 'SKL-ONB',
+          name: skillName,
+          level:
+            skillLevel === 'Beginner'
+              ? 'Beg'
+              : skillLevel === 'Intermediate'
+              ? 'Int'
+              : skillLevel === 'Advanced'
+              ? 'Adv'
+              : 'Expert',
+          verified: true,
+        },
+      ],
       certifications: [
         {
-          certId: 'CRT-' + Math.floor(1000 + Math.random() * 9000),
-          name: 'OSHA-30 & Agricultural Standard',
-          issuer: 'OSHA / Cooperative Board',
-          expiryDate: '2028-09-09',
+          certId: 'CRT-ONB',
+          name: certName,
+          issuer: 'Cooperative Safety Authority',
           status: 'valid',
+          expiryDate: '2028-09-30',
         },
       ],
     });
+
+    setIsSuccess(true);
   };
 
-  return (
-    <div className="flex flex-col w-full pb-24">
-      {/* Sub-Header Bar with Back Navigation */}
-      <div className="px-space-md py-3 bg-surface-container-lowest border-b border-surface-container-high flex items-center justify-between">
-        <div className="flex items-center gap-2">
+  if (isSuccess) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 max-w-lg mx-auto text-center space-y-5 my-12 bg-surface-container-lowest border border-surface-container-high rounded-3xl shadow-sm">
+        <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+          <span className="material-symbols-outlined text-[36px]">check_circle</span>
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-on-surface">Worker Added Successfully</h2>
+          <p className="text-sm text-on-surface-variant mt-1.5">
+            {fullName || 'Worker'} ({createdWorkerId}) has been added to {selectedCoop.name}.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 w-full pt-2">
           <button
-            onClick={() => navigate('workers')}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-on-surface hover:bg-surface-container transition-colors"
+            onClick={() => {
+              setSelectedWorkerId(createdWorkerId);
+              navigate('worker-profile', createdWorkerId);
+            }}
+            className="flex-1 py-3 px-5 rounded-xl bg-primary text-on-primary font-semibold text-sm hover:bg-primary-container transition-colors shadow-xs"
           >
-            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+            View Worker Profile
           </button>
-          <div className="flex flex-col">
-            <h1 className="font-headline-sm text-headline-sm text-on-surface">Worker Onboarding</h1>
-            <span className="font-body-sm text-[12px] text-on-surface-variant">Step 5 of 7: Competency Mapping</span>
-          </div>
-        </div>
-        <span className="px-2 py-0.5 rounded text-[11px] font-label-sm font-semibold bg-primary-fixed text-on-primary-fixed-variant">
-          In Progress
-        </span>
-      </div>
-
-      {/* Stepper Navigation Strip */}
-      <div className="w-full bg-surface-container-lowest border-b border-surface-container-high overflow-x-auto no-scrollbar py-2.5 px-space-md">
-        <div className="flex items-center gap-2 min-w-max">
-          {/* Step 1: Completed */}
-          <div className="flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-surface-container-low text-primary">
-            <span className="material-symbols-outlined text-[14px]">check</span>
-            <span className="font-label-sm text-label-sm font-medium">1. Personal</span>
-          </div>
-          <div className="w-3 h-0.5 bg-primary"></div>
-
-          {/* Step 2: Completed */}
-          <div className="flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-surface-container-low text-primary">
-            <span className="material-symbols-outlined text-[14px]">check</span>
-            <span className="font-label-sm text-label-sm font-medium">2. ID</span>
-          </div>
-          <div className="w-3 h-0.5 bg-primary"></div>
-
-          {/* Step 3: Completed */}
-          <div className="flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-surface-container-low text-primary">
-            <span className="material-symbols-outlined text-[14px]">check</span>
-            <span className="font-label-sm text-label-sm font-medium">3. Contact</span>
-          </div>
-          <div className="w-3 h-0.5 bg-primary"></div>
-
-          {/* Step 4: Completed */}
-          <div className="flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-surface-container-low text-primary">
-            <span className="material-symbols-outlined text-[14px]">check</span>
-            <span className="font-label-sm text-label-sm font-medium">4. Employment</span>
-          </div>
-          <div className="w-3 h-0.5 bg-primary"></div>
-
-          {/* Step 5: Active */}
-          <div className="flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-primary text-on-primary shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-on-primary animate-pulse"></span>
-            <span className="font-label-sm text-label-sm font-semibold">5. Competencies</span>
-          </div>
-          <div className="w-3 h-0.5 bg-surface-container-high"></div>
-
-          {/* Step 6: Upcoming */}
-          <div className="flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-surface-container-lowest text-outline border border-surface-container-high">
-            <span className="font-label-sm text-label-sm">6. Cooperative</span>
-          </div>
-          <div className="w-3 h-0.5 bg-surface-container-high"></div>
-
-          {/* Step 7: Upcoming */}
-          <div className="flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-surface-container-lowest text-outline border border-surface-container-high">
-            <span className="font-label-sm text-label-sm">7. Review</span>
-          </div>
+          <button
+            onClick={() => {
+              setIsSuccess(false);
+              setCurrentStep(1);
+              setFullName('');
+              setPhone('');
+              setEmail('');
+            }}
+            className="flex-1 py-3 px-5 rounded-xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-semibold text-sm transition-colors"
+          >
+            Add Another Worker
+          </button>
         </div>
       </div>
+    );
+  }
 
-      {/* Main Active Content Canvas */}
-      <form onSubmit={handleCompleteOnboarding} className="flex flex-col gap-space-md px-space-md py-space-sm">
-        {/* Worker Context Pill */}
-        <div className="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-lowest shadow-sm border border-surface-container-high">
-          <div className="flex items-center gap-space-sm min-w-0">
-            <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-primary font-headline-sm text-headline-sm shrink-0 font-bold">
-              CM
-            </div>
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="font-headline-sm text-headline-sm text-on-surface truncate">
-                  {fullName}
-                </span>
-                <span className="px-1.5 py-0.5 rounded text-[10px] font-label-sm bg-surface-container text-on-surface-variant uppercase">
-                  WKR-9402
-                </span>
-              </div>
-              <span className="font-body-sm text-body-sm text-on-surface-variant truncate">
-                {cooperatives.find((c) => c.id === selectedCoop)?.name || 'Apex Agro Cooperative'} • Field Ops Logistics
-              </span>
-            </div>
-          </div>
-          <span className="px-2 py-1 rounded bg-surface-container-low text-primary font-label-sm text-label-sm shrink-0">
-            Draft Active
+  const stepTitles = [
+    'Basic Information',
+    'Work Information',
+    'Cooperative',
+    'Skills & Certifications',
+    'Review',
+  ];
+
+  return (
+    <div className="flex flex-col w-full px-space-md py-space-sm space-y-space-md pb-24 max-w-3xl mx-auto">
+      {/* Back Link */}
+      <button
+        onClick={() => navigate('workers')}
+        className="flex items-center gap-1.5 text-secondary hover:text-on-surface text-sm font-medium transition-colors self-start"
+      >
+        <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+        <span>Back to Workers</span>
+      </button>
+
+      {/* Header & Step Counter */}
+      <div className="p-6 rounded-2xl bg-surface-container-lowest border border-surface-container-high shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-primary">
+            Step {currentStep} of {totalSteps}
+          </span>
+          <span className="text-xs font-medium text-on-surface-variant">
+            {stepTitles[currentStep - 1]}
           </span>
         </div>
 
-        {/* Worker Identity & Cooperative Assignment Section */}
-        <div className="p-space-md rounded-xl bg-surface-container-lowest shadow-sm border border-surface-container-high space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px] text-primary">badge</span>
-            <span className="font-headline-sm text-headline-sm text-on-surface">Worker Profile Information</span>
-          </div>
+        {/* Visual Progress Bar */}
+        <div className="w-full h-2 rounded-full bg-surface-container overflow-hidden">
+          <div
+            className="h-full bg-primary transition-all duration-300"
+            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+          ></div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-space-sm pt-1">
-            <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-label-sm text-on-surface-variant">Full Legal Name</label>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-on-surface">
+            {stepTitles[currentStep - 1]}
+          </h1>
+          <p className="text-xs sm:text-sm text-on-surface-variant mt-0.5">
+            {currentStep === 1 && 'Enter the worker’s legal name and contact details.'}
+            {currentStep === 2 && 'Select the worker’s trade role and employment status.'}
+            {currentStep === 3 && 'Assign this worker to a member cooperative society.'}
+            {currentStep === 4 && 'Add their primary skill competency and initial certification.'}
+            {currentStep === 5 && 'Verify all information before creating the worker profile.'}
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="p-6 rounded-2xl bg-surface-container-lowest border border-surface-container-high shadow-xs space-y-6">
+        {/* Step 1: Basic Information */}
+        {currentStep === 1 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-on-surface mb-1">
+                Full Legal Name <span className="text-error">*</span>
+              </label>
               <input
                 type="text"
+                required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                required
-                className="w-full h-10 px-3 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md outline-none border border-outline-variant focus:border-primary"
+                placeholder="e.g. Aarav Sharma"
+                className="w-full h-11 px-3.5 rounded-xl bg-surface-container-low border border-surface-container-high text-on-surface text-sm focus:outline-none focus:border-primary"
               />
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-label-sm text-on-surface-variant">Job Title / Role</label>
+            <div>
+              <label className="block text-sm font-semibold text-on-surface mb-1">
+                Phone Number <span className="text-error">*</span>
+              </label>
+              <input
+                type="tel"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="e.g. +1 (555) 234-5678"
+                className="w-full h-11 px-3.5 rounded-xl bg-surface-container-low border border-surface-container-high text-on-surface text-sm focus:outline-none focus:border-primary"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-on-surface mb-1">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="e.g. aarav.sharma@worker.cshrk.org"
+                className="w-full h-11 px-3.5 rounded-xl bg-surface-container-low border border-surface-container-high text-on-surface text-sm focus:outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Work Information */}
+        {currentStep === 2 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-on-surface mb-1">
+                Trade / Job Role <span className="text-error">*</span>
+              </label>
               <input
                 type="text"
+                required
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                required
-                className="w-full h-10 px-3 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md outline-none border border-outline-variant focus:border-primary"
+                placeholder="e.g. Senior Electrician"
+                className="w-full h-11 px-3.5 rounded-xl bg-surface-container-low border border-surface-container-high text-on-surface text-sm focus:outline-none focus:border-primary"
               />
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-label-sm text-on-surface-variant">Primary Affiliated Cooperative</label>
+            <div>
+              <label className="block text-sm font-semibold text-on-surface mb-1">
+                Employment Type <span className="text-error">*</span>
+              </label>
               <select
-                value={selectedCoop}
-                onChange={(e) => setSelectedCoop(e.target.value)}
-                className="w-full h-10 px-3 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md outline-none border border-outline-variant focus:border-primary"
+                value={employmentType}
+                onChange={(e) => setEmploymentType(e.target.value as any)}
+                className="w-full h-11 px-3 rounded-xl bg-surface-container-low border border-surface-container-high text-on-surface text-sm focus:outline-none focus:border-primary"
+              >
+                <option value="Full-Time">Full-Time Member Worker</option>
+                <option value="Contract">Contract Worker</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Cooperative Society */}
+        {currentStep === 3 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-on-surface mb-1">
+                Select Cooperative Society <span className="text-error">*</span>
+              </label>
+              <select
+                value={cooperativeId}
+                onChange={(e) => setCooperativeId(e.target.value)}
+                className="w-full h-11 px-3 rounded-xl bg-surface-container-low border border-surface-container-high text-on-surface text-sm focus:outline-none focus:border-primary"
               >
                 {cooperatives.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} ({c.region})
+                    {c.name} ({c.registrationNumber}) — {c.region}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-label-sm text-on-surface-variant">Employment Classification</label>
-              <select
-                value={employmentType}
-                onChange={(e) => setEmploymentType(e.target.value as any)}
-                className="w-full h-10 px-3 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md outline-none border border-outline-variant focus:border-primary"
-              >
-                <option value="Full-Time">Full-Time Member Worker</option>
-                <option value="Contract">Contract Worker</option>
-                <option value="In Onboarding">Apprentice in Onboarding</option>
-              </select>
+            <div className="p-4 rounded-xl bg-surface-container-low border border-surface-container-high space-y-1 text-sm">
+              <span className="font-semibold text-on-surface">Selected Cooperative:</span>
+              <p className="text-on-surface-variant text-xs">
+                {selectedCoop.name} • {selectedCoop.memberCount} existing members • Regional delegate: {selectedCoop.delegateName}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Skills & Certifications */}
+        {currentStep === 4 && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-on-surface mb-1">
+                  Primary Trade Skill <span className="text-error">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={skillName}
+                  onChange={(e) => setSkillName(e.target.value)}
+                  placeholder="e.g. Electrical Wiring"
+                  className="w-full h-11 px-3.5 rounded-xl bg-surface-container-low border border-surface-container-high text-on-surface text-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-on-surface mb-1">
+                  Proficiency Level <span className="text-error">*</span>
+                </label>
+                <select
+                  value={skillLevel}
+                  onChange={(e) => setSkillLevel(e.target.value as any)}
+                  className="w-full h-11 px-3 rounded-xl bg-surface-container-low border border-surface-container-high text-on-surface text-sm focus:outline-none focus:border-primary"
+                >
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                  <option value="Expert">Expert</option>
+                </select>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-label-sm text-on-surface-variant">Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full h-10 px-3 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md outline-none border border-outline-variant focus:border-primary"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="font-label-sm text-label-sm text-on-surface-variant">Phone Number</label>
+            <div>
+              <label className="block text-sm font-semibold text-on-surface mb-1">
+                Initial Certification / Qualification
+              </label>
               <input
                 type="text"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                required
-                className="w-full h-10 px-3 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md outline-none border border-outline-variant focus:border-primary"
+                value={certName}
+                onChange={(e) => setCertName(e.target.value)}
+                placeholder="e.g. OSHA 30-Hour Construction Safety"
+                className="w-full h-11 px-3.5 rounded-xl bg-surface-container-low border border-surface-container-high text-on-surface text-sm focus:outline-none focus:border-primary"
               />
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Competencies Form Section */}
-        <div className="flex flex-col gap-space-sm p-space-md rounded-xl bg-surface-container-lowest shadow-sm border border-surface-container-high">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px] text-primary fill-1">psychology</span>
-              <span className="font-headline-sm text-headline-sm text-on-surface">Add Worker Competencies</span>
-            </div>
-            <span className="font-label-sm text-label-sm text-on-surface-variant">
-              {skillsList.length} Selected
-            </span>
-          </div>
-
-          {/* Search Bar */}
-          <div className="relative w-full">
-            <span className="material-symbols-outlined absolute left-3 top-2.5 text-[20px] text-outline">search</span>
-            <input
-              type="text"
-              value={skillSearch}
-              onChange={(e) => setSkillSearch(e.target.value)}
-              placeholder="Search skills (e.g. Arc Welding, Soil Testing)..."
-              className="w-full h-10 pl-10 pr-4 rounded-lg bg-surface-container-lowest font-body-md text-body-md text-on-surface outline-none border border-outline-variant focus:border-primary shadow-sm"
-            />
-          </div>
-
-          {/* Category Filter Chips */}
-          <div className="overflow-x-auto no-scrollbar -mx-space-md px-space-md pt-1">
-            <div className="flex items-center gap-1.5 min-w-max">
-              {['All', 'Heavy Machinery', 'Agronomy', 'Electrical', 'QA & Safety'].map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setActiveCategoryFilter(cat)}
-                  className={`px-3 py-1 rounded-full font-label-sm text-label-sm transition-colors ${
-                    activeCategoryFilter === cat
-                      ? 'bg-primary text-on-primary shadow-sm'
-                      : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Active Selected Skills Cards */}
-        <div className="flex flex-col gap-space-sm">
-          <div className="flex items-center justify-between px-1">
-            <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">
-              Validated Skills Configuration
-            </span>
-            <span className="font-code-sm text-code-sm text-outline">CR-204 Compliant</span>
-          </div>
-
-          {skillsList.map((skill) => (
-            <div
-              key={skill.id}
-              className="flex flex-col p-space-md rounded-xl bg-surface-container-lowest shadow-sm border border-surface-container-high gap-space-sm relative"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-space-xs min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">{skill.icon}</span>
-                  </div>
-                  <div className="flex flex-col min-w-0">
-                    <span className="font-headline-sm text-headline-sm text-on-surface truncate">{skill.name}</span>
-                    <span className="font-body-sm text-body-sm text-on-surface-variant truncate">{skill.category}</span>
-                  </div>
+        {/* Step 5: Review */}
+        {currentStep === 5 && (
+          <div className="space-y-4 text-sm">
+            <div className="p-4 rounded-xl bg-surface-container-low border border-surface-container-high space-y-3">
+              <h3 className="font-bold text-on-surface text-base border-b border-surface-container pb-2">
+                Worker Review Summary
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <span className="text-xs text-on-surface-variant block">Full Name</span>
+                  <span className="font-semibold text-on-surface">{fullName || 'Not provided'}</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveSkill(skill.id)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-outline hover:text-error hover:bg-surface-container transition-colors shrink-0"
-                  title="Remove Skill"
-                >
-                  <span className="material-symbols-outlined text-[18px]">close</span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-space-sm pt-space-2xs">
-                {/* Proficiency Dropdown */}
-                <div className="flex flex-col gap-1">
-                  <label className="font-label-sm text-label-sm text-on-surface-variant">Proficiency Level</label>
-                  <div className="relative">
-                    <select
-                      value={skill.level}
-                      onChange={(e) => {
-                        const val = e.target.value as any;
-                        setSkillsList((prev) =>
-                          prev.map((s) => (s.id === skill.id ? { ...s, level: val } : s))
-                        );
-                      }}
-                      className="w-full h-9 px-2.5 rounded-lg bg-surface-container-lowest font-body-sm text-body-sm text-on-surface border border-outline-variant outline-none"
-                    >
-                      <option value="beginner">Beginner</option>
-                      <option value="intermediate">Intermediate</option>
-                      <option value="advanced">Advanced</option>
-                      <option value="expert">Expert</option>
-                    </select>
-                  </div>
+                <div>
+                  <span className="text-xs text-on-surface-variant block">Phone</span>
+                  <span className="font-semibold text-on-surface">{phone || 'Not provided'}</span>
                 </div>
-
-                {/* Experience Input */}
-                <div className="flex flex-col gap-1">
-                  <label className="font-label-sm text-label-sm text-on-surface-variant">Verified Experience</label>
-                  <div className="relative">
-                    <select
-                      value={skill.experience}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setSkillsList((prev) =>
-                          prev.map((s) => (s.id === skill.id ? { ...s, experience: val } : s))
-                        );
-                      }}
-                      className="w-full h-9 px-2.5 rounded-lg bg-surface-container-lowest font-body-sm text-body-sm text-on-surface border border-outline-variant outline-none"
-                    >
-                      <option value="1">1 Year</option>
-                      <option value="2">2 Years</option>
-                      <option value="3">3 Years</option>
-                      <option value="5">5+ Years</option>
-                    </select>
-                  </div>
+                <div>
+                  <span className="text-xs text-on-surface-variant block">Trade Role</span>
+                  <span className="font-semibold text-on-surface">{role}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-on-surface-variant block">Employment Type</span>
+                  <span className="font-semibold text-on-surface">{employmentType}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-on-surface-variant block">Cooperative Society</span>
+                  <span className="font-semibold text-on-surface">{selectedCoop.name}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-on-surface-variant block">Primary Skill</span>
+                  <span className="font-semibold text-on-surface">{skillName} ({skillLevel})</span>
                 </div>
               </div>
-
-              <div className="flex items-center gap-2 pt-1">
-                <span className="px-2 py-0.5 rounded text-[11px] font-label-sm bg-surface-container text-primary flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[14px]">verified</span> {skill.tag}
-                </span>
-                <span className="font-body-sm text-[11px] text-on-surface-variant">ID: {skill.id}</span>
-              </div>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
 
-        {/* Form Submission Buttons */}
-        <div className="flex items-center justify-between gap-3 pt-4 border-t border-surface-container-high">
+        {/* Bottom Navigation Buttons */}
+        <div className="flex items-center justify-between pt-4 border-t border-surface-container-high">
           <button
             type="button"
-            onClick={() => navigate('workers')}
-            className="h-11 px-5 rounded-xl bg-surface-container-low text-secondary hover:text-on-surface font-label-md text-label-md transition-colors"
+            onClick={handleBack}
+            disabled={currentStep === 1}
+            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+              currentStep === 1
+                ? 'opacity-40 cursor-not-allowed text-on-surface-variant'
+                : 'bg-surface-container hover:bg-surface-container-high text-on-surface'
+            }`}
           >
-            Cancel Onboarding
+            Back
           </button>
 
-          <button
-            type="submit"
-            className="h-11 px-6 rounded-xl bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md shadow-sm transition-all flex items-center gap-2"
-          >
-            <span>Complete Onboarding</span>
-            <span className="material-symbols-outlined text-[18px]">check_circle</span>
-          </button>
+          {currentStep < totalSteps ? (
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-6 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-semibold hover:bg-primary-container transition-colors shadow-xs"
+            >
+              Continue
+            </button>
+          ) : (
+            <button
+              type="submit"
+              className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors shadow-xs flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-[18px]">person_add</span>
+              <span>Create Worker</span>
+            </button>
+          )}
         </div>
       </form>
     </div>

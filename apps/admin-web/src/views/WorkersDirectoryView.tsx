@@ -1,412 +1,277 @@
 import React, { useState, useMemo } from 'react';
 import { useWorkforce } from '../context/WorkforceContext';
+import { MASTER_AVATARS } from '../data/workforceData';
 
 export const WorkersDirectoryView: React.FC = () => {
-  const { workers, navigate, setSelectedWorkerId, metrics } = useWorkforce();
+  const { workers, navigate, setSelectedWorkerId } = useWorkforce();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'onboarding' | 'expiring' | 'inactive'>('all');
-  const [coopFilter, setCoopFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'onboarding'>('all');
+
+  const counts = useMemo(() => {
+    return {
+      all: workers.length,
+      active: workers.filter((w) => w.status === 'active').length,
+      inactive: workers.filter((w) => w.status === 'inactive').length,
+      onboarding: workers.filter((w) => w.status === 'onboarding').length,
+    };
+  }, [workers]);
 
   const filteredWorkers = useMemo(() => {
     return workers.filter((worker) => {
-      // Status filter
-      if (statusFilter !== 'all') {
-        if (statusFilter === 'expiring') {
-          const hasExpiring = worker.certifications.some((c) => c.status === 'expiring') || worker.status === 'expiring';
-          if (!hasExpiring) return false;
-        } else if (worker.status !== statusFilter) {
-          return false;
-        }
-      }
-
-      // Coop filter
-      if (coopFilter !== 'all' && worker.cooperativeName !== coopFilter) {
+      // Filter by simple status
+      if (statusFilter !== 'all' && worker.status !== statusFilter) {
         return false;
       }
 
-      // Search query
+      // Filter by search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesName = worker.fullName.toLowerCase().includes(q);
         const matchesId = worker.id.toLowerCase().includes(q);
         const matchesRole = worker.role.toLowerCase().includes(q);
         const matchesCoop = worker.cooperativeName.toLowerCase().includes(q);
-        const matchesSkill = worker.skills.some((s) => s.name.toLowerCase().includes(q));
-        if (!matchesName && !matchesId && !matchesRole && !matchesCoop && !matchesSkill) {
+        if (!matchesName && !matchesId && !matchesRole && !matchesCoop) {
           return false;
         }
       }
 
       return true;
     });
-  }, [workers, searchQuery, statusFilter, coopFilter]);
+  }, [workers, searchQuery, statusFilter]);
 
-  const handleResetFilters = () => {
-    setSearchQuery('');
-    setStatusFilter('all');
-    setCoopFilter('all');
+  const handleOpenWorker = (id: string) => {
+    setSelectedWorkerId(id);
+    navigate('worker-profile', id);
+  };
+
+  const handleEditWorker = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setSelectedWorkerId(id);
+    navigate('edit-worker', id);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-900">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+            Active
+          </span>
+        );
+      case 'onboarding':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-900">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+            Onboarding
+          </span>
+        );
+      case 'inactive':
+      default:
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-container-high text-on-surface-variant">
+            <span className="w-1.5 h-1.5 rounded-full bg-outline"></span>
+            Inactive
+          </span>
+        );
+    }
   };
 
   return (
-    <div className="flex flex-col w-full px-space-md py-space-sm space-y-space-md pb-24">
-      {/* Header & Primary Action */}
-      <div className="flex items-start justify-between gap-space-sm">
-        <div className="flex flex-col">
-          <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+    <div className="flex flex-col w-full px-space-md py-space-sm space-y-space-md pb-24 max-w-7xl mx-auto">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">
             Workers
           </h1>
-          <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5 leading-snug">
-            Manage worker profiles, skills, certifications, and cooperative affiliations.
+          <p className="font-body-md text-body-md text-on-surface-variant mt-0.5">
+            Search, view, and manage workers across all cooperatives.
           </p>
         </div>
         <button
           onClick={() => navigate('worker-onboarding')}
-          className="shrink-0 flex items-center gap-space-2xs bg-primary text-on-primary font-label-md text-label-md px-space-sm py-2 rounded-xl shadow-sm hover:bg-primary-container active:opacity-90 transition-all"
+          className="self-start sm:self-auto flex items-center gap-2 bg-primary text-on-primary font-label-md text-label-md px-5 py-2.5 rounded-xl shadow-sm hover:bg-primary-container active:opacity-90 transition-all"
         >
-          <span className="material-symbols-outlined text-[18px]">person_add</span>
+          <span className="material-symbols-outlined text-[20px]">person_add</span>
           <span>Add Worker</span>
         </button>
       </div>
 
-      {/* Search & Filter Controls */}
-      <div className="flex flex-col space-y-space-xs">
+      {/* Search & Filters Card */}
+      <div className="p-4 rounded-2xl bg-surface-container-lowest border border-surface-container-high shadow-xs space-y-3">
+        {/* Search Input */}
         <div className="relative w-full">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">
+          <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">
             search
           </span>
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search worker name, ID, phone, or email..."
-            className="w-full h-11 pl-10 pr-10 bg-surface-container-lowest text-on-surface placeholder:text-on-surface-variant/70 font-body-md text-body-md rounded-xl shadow-sm focus:outline-none focus:bg-surface-container-low transition-colors"
+            placeholder="Search workers by name, ID, or trade..."
+            className="w-full h-11 pl-11 pr-10 bg-surface-container-low border border-surface-container-high rounded-xl text-on-surface placeholder:text-on-surface-variant/70 text-sm focus:outline-none focus:border-primary focus:bg-surface-container-lowest transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant p-1 hover:text-on-surface"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-1"
             >
               <span className="material-symbols-outlined text-[18px]">close</span>
             </button>
           )}
         </div>
 
-        {/* Quick filter triggers & Clear state toggle */}
-        <div className="flex items-center justify-between gap-space-xs pt-1">
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-            <button className="flex items-center gap-1 bg-primary text-on-primary font-label-sm text-label-sm px-2.5 py-1.5 rounded-lg shrink-0 shadow-sm">
-              <span className="material-symbols-outlined text-[15px]">tune</span>
-              <span>Filters</span>
-            </button>
+        {/* 4 Simple Status Filters */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-1">
+          <button
+            onClick={() => setStatusFilter('all')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+              statusFilter === 'all'
+                ? 'bg-primary text-on-primary shadow-xs'
+                : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+            }`}
+          >
+            <span>All</span>
+            <span className="opacity-80">({counts.all})</span>
+          </button>
 
-            {/* Cooperative Filter Dropdown */}
-            <select
-              value={coopFilter}
-              onChange={(e) => setCoopFilter(e.target.value)}
-              className="bg-surface-container-low text-on-surface font-label-sm text-label-sm px-2.5 py-1.5 rounded-lg shrink-0 border-none outline-none cursor-pointer"
-            >
-              <option value="all">All Cooperatives</option>
-              <option value="Apex Agro Cooperative">Apex Agro</option>
-              <option value="Midland Fabrication Cooperative">Midland Fabrication</option>
-              <option value="Cascadia Forestry Cooperative">Cascadia Forestry</option>
-              <option value="SunGrid Energy Cooperative">SunGrid Energy</option>
-              <option value="Great Lakes Logistics Cooperative">Great Lakes Logistics</option>
-            </select>
-          </div>
+          <button
+            onClick={() => setStatusFilter('active')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+              statusFilter === 'active'
+                ? 'bg-emerald-700 text-white shadow-xs'
+                : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+            }`}
+          >
+            <span>Active</span>
+            <span className="opacity-80">({counts.active})</span>
+          </button>
 
-          {(searchQuery || statusFilter !== 'all' || coopFilter !== 'all') && (
+          <button
+            onClick={() => setStatusFilter('onboarding')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+              statusFilter === 'onboarding'
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+            }`}
+          >
+            <span>Onboarding</span>
+            <span className="opacity-80">({counts.onboarding})</span>
+          </button>
+
+          <button
+            onClick={() => setStatusFilter('inactive')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+              statusFilter === 'inactive'
+                ? 'bg-secondary text-on-secondary shadow-xs'
+                : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+            }`}
+          >
+            <span>Inactive</span>
+            <span className="opacity-80">({counts.inactive})</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Workers List / Table */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between text-xs text-on-surface-variant font-medium px-1">
+          <span>Showing {filteredWorkers.length} workers</span>
+          {searchQuery && (
             <button
-              onClick={handleResetFilters}
-              className="shrink-0 text-primary font-label-sm text-label-sm px-1.5 py-1 hover:underline"
+              onClick={() => {
+                setSearchQuery('');
+                setStatusFilter('all');
+              }}
+              className="text-primary hover:underline"
             >
-              Clear Filters
+              Clear search
             </button>
           )}
         </div>
-      </div>
 
-      {/* Status Segmented Filter Chips */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-        <button
-          onClick={() => setStatusFilter('all')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm shadow-sm shrink-0 transition-colors ${
-            statusFilter === 'all'
-              ? 'bg-primary text-on-primary'
-              : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface'
-          }`}
-        >
-          <span>All</span>
-          <span
-            className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              statusFilter === 'all' ? 'bg-on-primary/20 text-on-primary' : 'bg-surface-container text-on-surface-variant'
-            }`}
-          >
-            {metrics.totalWorkforce.toLocaleString()}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setStatusFilter('active')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm shadow-sm shrink-0 transition-colors ${
-            statusFilter === 'active'
-              ? 'bg-primary text-on-primary'
-              : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface'
-          }`}
-        >
-          <span>Active</span>
-          <span
-            className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              statusFilter === 'active' ? 'bg-on-primary/20 text-on-primary' : 'bg-surface-container text-on-surface-variant'
-            }`}
-          >
-            {metrics.activeWorkers.toLocaleString()}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setStatusFilter('onboarding')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm shadow-sm shrink-0 transition-colors ${
-            statusFilter === 'onboarding'
-              ? 'bg-primary text-on-primary'
-              : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface'
-          }`}
-        >
-          <span>Onboarding</span>
-          <span
-            className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              statusFilter === 'onboarding' ? 'bg-on-primary/20 text-on-primary' : 'bg-surface-container text-on-surface-variant'
-            }`}
-          >
-            {metrics.onboardingWorkers}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setStatusFilter('expiring')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm shadow-sm shrink-0 transition-colors ${
-            statusFilter === 'expiring'
-              ? 'bg-error text-on-error'
-              : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface'
-          }`}
-        >
-          <span>Expiring Certs</span>
-          <span
-            className={`px-1.5 py-0.2 rounded-full text-[10px] font-semibold ${
-              statusFilter === 'expiring' ? 'bg-on-error/20 text-on-error' : 'bg-error-container text-on-error-container'
-            }`}
-          >
-            {metrics.expiringCertifications}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setStatusFilter('inactive')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-sm text-label-sm shadow-sm shrink-0 transition-colors ${
-            statusFilter === 'inactive'
-              ? 'bg-primary text-on-primary'
-              : 'bg-surface-container-low text-on-surface-variant hover:text-on-surface'
-          }`}
-        >
-          <span>Inactive</span>
-          <span
-            className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-              statusFilter === 'inactive' ? 'bg-on-primary/20 text-on-primary' : 'bg-surface-container text-on-surface-variant'
-            }`}
-          >
-            {metrics.inactiveWorkers}
-          </span>
-        </button>
-      </div>
-
-      {/* Worker Cards List */}
-      {filteredWorkers.length === 0 ? (
-        <div className="flex flex-col items-center justify-center bg-surface-container-lowest rounded-xl p-8 text-center space-y-3 shadow-sm my-4">
-          <div className="w-14 h-14 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
-            <span className="material-symbols-outlined text-[30px]">group_off</span>
-          </div>
-          <div className="flex flex-col space-y-1">
-            <span className="font-headline-sm text-headline-sm text-on-surface">No Workers Found</span>
-            <p className="font-body-sm text-body-sm text-on-surface-variant max-w-xs">
-              No active worker profiles match your current search and filter parameters.
+        {filteredWorkers.length === 0 ? (
+          <div className="p-12 text-center rounded-2xl bg-surface-container-lowest border border-surface-container-high space-y-3">
+            <span className="material-symbols-outlined text-[48px] text-on-surface-variant/50">
+              person_search
+            </span>
+            <h3 className="font-bold text-on-surface text-base">No workers found</h3>
+            <p className="text-sm text-on-surface-variant max-w-sm mx-auto">
+              No workers matched &ldquo;{searchQuery}&rdquo;. Try another name or clear your filters.
             </p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setStatusFilter('all');
+              }}
+              className="px-4 py-2 rounded-xl bg-surface-container-high text-on-surface font-label-md text-sm hover:bg-surface-container-highest"
+            >
+              Reset Filters
+            </button>
           </div>
-          <button
-            onClick={handleResetFilters}
-            className="bg-primary text-on-primary font-label-md text-label-md px-4 py-2 rounded-xl active:opacity-90 shadow-sm mt-2"
-          >
-            Reset All Filters
-          </button>
-        </div>
-      ) : (
-        <div className="flex flex-col space-y-3.5">
-          {filteredWorkers.map((worker) => {
-            const hasExpiringCert = worker.certifications.some((c) => c.status === 'expiring');
-            const hasPendingCert = worker.certifications.some((c) => c.status === 'pending');
-
-            let statusBadgeColor = 'bg-tertiary-fixed text-on-tertiary-fixed';
-            let statusLabel = `${worker.status === 'active' ? 'Active' : worker.status} · ${worker.employmentType === 'Full-Time' ? 'FT' : worker.employmentType === 'Contract' ? 'Contract' : worker.employmentType}`;
-
-            if (worker.status === 'onboarding') {
-              statusBadgeColor = 'bg-primary-fixed text-on-primary-fixed-variant';
-              statusLabel = 'In Onboarding · FT';
-            } else if (worker.status === 'inactive') {
-              statusBadgeColor = 'bg-surface-container text-on-surface-variant';
-              statusLabel = 'Inactive · Stand-down';
-            } else if (hasExpiringCert) {
-              statusBadgeColor = 'bg-error-container text-on-error-container';
-              statusLabel = 'Action Needed';
-            }
-
-            return (
+        ) : (
+          <div className="grid grid-cols-1 gap-3">
+            {filteredWorkers.map((worker) => (
               <div
                 key={worker.id}
-                className="worker-card flex flex-col bg-surface-container-lowest rounded-xl p-4 shadow-sm space-y-3 transition-transform active:scale-[0.99]"
+                onClick={() => handleOpenWorker(worker.id)}
+                className="p-4 sm:p-5 rounded-2xl bg-surface-container-lowest border border-surface-container-high shadow-xs hover:border-primary/50 cursor-pointer transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
-                {/* Top Profile Row */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <img
-                      className="w-12 h-12 rounded-xl object-cover bg-surface-container shrink-0"
-                      src={worker.avatar}
-                      alt={worker.fullName}
-                    />
-                    <div className="flex flex-col min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-headline-sm text-headline-sm text-on-surface truncate">
-                          {worker.fullName}
-                        </span>
-                        <span className="font-code-sm text-[11px] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">
-                          {worker.id}
-                        </span>
-                      </div>
-                      <span className="font-body-sm text-body-sm text-primary font-medium truncate mt-0.5">
-                        {worker.role}
+                {/* Left: Avatar + Identity */}
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <img
+                    src={worker.id === 'WKR-8042' ? MASTER_AVATARS.CARLOS_PROFILE : worker.avatar}
+                    alt={worker.fullName}
+                    className="w-12 h-12 rounded-full object-cover shrink-0 border border-surface-container-high"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-on-surface text-base truncate">
+                        {worker.fullName}
+                      </h3>
+                      <span className="text-xs text-on-surface-variant bg-surface-container px-2 py-0.5 rounded font-mono shrink-0">
+                        {worker.id}
                       </span>
-                      <div className="flex items-center gap-1 text-on-surface-variant text-[11px] font-label-sm mt-0.5">
-                        <span className="material-symbols-outlined text-[13px] text-secondary">domain</span>
-                        <span className="truncate">{worker.cooperativeName} · Since {worker.joinedDate.split(' ')[2]}</span>
-                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded font-label-sm text-label-sm font-semibold ${statusBadgeColor}`}>
-                      {statusLabel}
-                    </span>
+                    <p className="text-sm text-on-surface-variant truncate mt-0.5">
+                      {worker.role}
+                    </p>
                   </div>
                 </div>
 
-                {/* Skills Matrix Tags */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                  {worker.skills.slice(0, 2).map((skill) => (
-                    <span
-                      key={skill.name}
-                      className="inline-flex items-center gap-1 font-label-sm text-[11px] bg-surface-container-low text-on-surface px-2 py-0.5 rounded"
+                {/* Center: Cooperative & Trade Status */}
+                <div className="flex items-center gap-4 sm:gap-6 shrink-0">
+                  <div className="hidden md:flex flex-col text-left">
+                    <span className="text-xs text-on-surface-variant">Cooperative</span>
+                    <span className="text-sm font-medium text-on-surface truncate max-w-[180px]">
+                      {worker.cooperativeName}
+                    </span>
+                  </div>
+
+                  <div>{getStatusBadge(worker.status)}</div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => handleEditWorker(e, worker.id)}
+                      className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold transition-colors"
+                      title="Edit Worker"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                      {skill.name} <strong className="text-primary font-semibold">{skill.level}</strong>
-                    </span>
-                  ))}
-                  {worker.skills.length > 2 && (
-                    <span className="font-label-sm text-[10px] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded">
-                      +{worker.skills.length - 2} more
-                    </span>
-                  )}
-                </div>
-
-                {/* Certification Status Strip */}
-                {hasExpiringCert ? (
-                  <div className="flex items-center justify-between bg-error-container/40 px-2.5 py-1.5 rounded-lg text-on-error-container">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="material-symbols-outlined text-[16px] text-error shrink-0">warning</span>
-                      <span className="font-label-sm text-label-sm truncate font-medium">Heavy Machinery Operations Cert</span>
-                    </div>
-                    <span className="shrink-0 font-label-sm text-[10px] px-2 py-0.5 rounded bg-error text-on-error font-semibold">
-                      Expiring in 8 days
-                    </span>
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleOpenWorker(worker.id)}
+                      className="px-3.5 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container transition-colors shadow-xs"
+                    >
+                      View Profile
+                    </button>
                   </div>
-                ) : hasPendingCert ? (
-                  <div className="flex items-center justify-between bg-surface-container px-2.5 py-1.5 rounded-lg text-on-surface">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="material-symbols-outlined text-[16px] text-primary shrink-0">pending_actions</span>
-                      <span className="font-label-sm text-label-sm truncate">NABCEP Associate Credential</span>
-                    </div>
-                    <span className="shrink-0 font-label-sm text-[10px] px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-semibold">
-                      Pending Verification
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between bg-surface-container-low px-2.5 py-1.5 rounded-lg text-on-surface">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="material-symbols-outlined text-[16px] text-tertiary-container shrink-0">verified</span>
-                      <span className="font-label-sm text-label-sm truncate">
-                        {worker.certifications[0]?.name || 'Standard Compliant'}
-                      </span>
-                    </div>
-                    <span className="shrink-0 font-label-sm text-[10px] px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-semibold">
-                      Valid
-                    </span>
-                  </div>
-                )}
-
-                {/* Quick Contact Info */}
-                <div className="flex items-center justify-between text-on-surface-variant font-body-sm text-[12px] pt-1">
-                  <div className="flex items-center gap-1 truncate">
-                    <span className="material-symbols-outlined text-[14px]">mail</span>
-                    <span className="truncate">{worker.email}</span>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <span className="material-symbols-outlined text-[14px]">call</span>
-                    <span>{worker.phone}</span>
-                  </div>
-                </div>
-
-                {/* Card Actions */}
-                <div className="flex items-center gap-2 pt-1">
-                  <button
-                    onClick={() => {
-                      setSelectedWorkerId(worker.id);
-                      navigate('worker-profile', worker.id);
-                    }}
-                    className="flex-1 bg-surface-container-high text-primary font-label-md text-label-md py-2 px-3 rounded-xl flex items-center justify-center gap-1.5 hover:bg-primary hover:text-on-primary active:opacity-90 transition-colors"
-                  >
-                    <span>View Profile</span>
-                    <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedWorkerId(worker.id);
-                      navigate('worker-profile', worker.id);
-                    }}
-                    className="w-10 h-9 flex items-center justify-center bg-surface-container-low text-on-surface-variant rounded-xl hover:bg-surface-container transition-colors"
-                    title="Profile Details"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">more_vert</span>
-                  </button>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Pagination & Directory Footer */}
-      <div className="flex items-center justify-between pt-2 pb-6 text-on-surface-variant font-label-sm text-label-sm">
-        <span className="text-[12px]">
-          Showing <strong className="text-on-surface font-semibold">1–{filteredWorkers.length}</strong> of{' '}
-          <strong className="text-on-surface font-semibold">{metrics.totalWorkforce.toLocaleString()}</strong> workers
-        </span>
-        <div className="flex items-center gap-1.5">
-          <button
-            disabled
-            className="w-8 h-8 rounded-lg bg-surface-container-lowest text-on-surface-variant flex items-center justify-center shadow-sm disabled:opacity-40"
-          >
-            <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-          </button>
-          <button className="w-8 h-8 rounded-lg bg-surface-container-lowest text-on-surface flex items-center justify-center shadow-sm hover:bg-surface-container">
-            <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-          </button>
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
