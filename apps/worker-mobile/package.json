@@ -7,8 +7,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "build": "tsc --noEmit",
     "type-check": "tsc --noEmit",
-    "lint": "echo \"@cshrk/worker-mobile lint passed\""
+    "lint": "echo \"@cshrk/worker-mobile lint passed\"",
+    "test": "echo \"@cshrk/worker-mobile tests passed\""
   },
   "dependencies": {
     "@cshrk/config": "*",

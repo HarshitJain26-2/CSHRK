@@ -128,9 +128,7 @@ export const WorkerProfileView: React.FC = () => {
         {/* Main Header Action CTA Strip */}
         <div className="flex items-center gap-2 pt-1">
           <button
-            onClick={() => {
-              addToast('info', 'Edit Mode Active', `Editing worker profile for ${worker.fullName}.`);
-            }}
+            onClick={() => navigate('edit-worker', worker.id)}
             className="flex-1 h-10 px-4 rounded-xl bg-primary text-on-primary font-label-md text-label-md flex items-center justify-center gap-1.5 shadow-sm hover:bg-primary-container active:opacity-90 transition-colors"
           >
             <span className="material-symbols-outlined text-[18px]">edit</span>

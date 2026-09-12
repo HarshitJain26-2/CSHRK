@@ -101,12 +101,12 @@ export const CertificationManagementView: React.FC = () => {
               statusFilter === 'all' ? 'ring-2 ring-primary' : 'hover:border-primary/40'
             }`}
           >
-            <span className="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Total Certs</span>
+            <span className="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Cert Records</span>
             <div className="mt-space-xs">
               <div className="font-headline-lg text-headline-lg text-on-surface tabular-nums">
                 {metrics.totalCertifications.toLocaleString()}
               </div>
-              <span className="text-[11px] font-body-sm text-secondary">Registered</span>
+              <span className="text-[11px] font-body-sm text-secondary">Total Records</span>
             </div>
           </div>
 

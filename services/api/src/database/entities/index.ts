@@ -15,3 +15,4 @@ export * from './rating.entity';
 export * from './complaint.entity';
 export * from './welfare-record.entity';
 export * from './audit-log.entity';
+export { CertificationEntity } from './certification.entity';

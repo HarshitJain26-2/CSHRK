@@ -12,6 +12,7 @@ import { WorkforceDashboardView } from './views/WorkforceDashboardView';
 import { WorkersDirectoryView } from './views/WorkersDirectoryView';
 import { WorkerOnboardingView } from './views/WorkerOnboardingView';
 import { WorkerProfileView } from './views/WorkerProfileView';
+import { EditWorkerView } from './views/EditWorkerView';
 
 // Additional Views (21 Screens)
 import { SkillsManagementView } from './views/SkillsManagementView';
@@ -61,6 +62,8 @@ const MainAppContent: React.FC = () => {
         return <WorkerOnboardingView />;
       case 'worker-profile':
         return <WorkerProfileView />;
+      case 'edit-worker':
+        return <EditWorkerView />;
 
       // 1-4: Skills Suite
       case 'skills':

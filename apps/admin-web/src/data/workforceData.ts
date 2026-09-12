@@ -1104,7 +1104,7 @@ export const SYSTEM_METRICS = {
   totalCooperatives: 18,
   activeCooperatives: 18,
   avgComplianceRate: 95.8,
-  totalCertifications: 2845,
+  totalCertifications: 2835,
   validCertifications: 2546,
   expiringCertifications: 28,
   expiredCertifications: 112,

@@ -1,4 +1,4 @@
-import { Entity, Column, OneToOne, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, OneToOne, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import {
   AccountStatus,
   WorkerAvailabilityStatus,
@@ -7,6 +7,8 @@ import {
 import { CshrkBaseEntity } from '../../common/entities/base.entity';
 import { UserEntity } from './user.entity';
 import { CooperativeEntity } from './cooperative.entity';
+import { WorkerSkillEntity } from './worker-skill.entity';
+import { CertificationEntity } from './certification.entity';
 
 @Entity('workers')
 export class WorkerEntity extends CshrkBaseEntity {
@@ -72,4 +74,10 @@ export class WorkerEntity extends CshrkBaseEntity {
 
   @Column({ name: 'total_jobs', type: 'int', default: 0 })
   totalJobs: number;
+
+  @OneToMany(() => WorkerSkillEntity, (ws) => ws.worker)
+  workerSkills: WorkerSkillEntity[];
+
+  @OneToMany(() => CertificationEntity, (cert) => cert.worker)
+  certifications: CertificationEntity[];
 }

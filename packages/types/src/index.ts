@@ -179,6 +179,53 @@ export interface ISkill {
   description?: string;
 }
 
+export interface IWorkerSkill {
+  id: string;
+  workerId: string;
+  skillId: string;
+  skill?: ISkill;
+  proficiencyLevel: ProficiencyLevel;
+  isVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ICertification {
+  id: string;
+  workerId: string;
+  title: string;
+  issuingAuthority: string;
+  issueDate: string;
+  expiryDate?: string;
+  verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  documentUrl?: string;
+}
+
+export interface IJobAssignment {
+  id: string;
+  bookingId: string;
+  serviceRequestId: string;
+  customerName: string;
+  serviceCategory: string;
+  title: string;
+  description?: string;
+  locationAddress: string;
+  distanceKm?: number;
+  scheduledAt: string;
+  estimatedPayout: number;
+  status: 'PENDING_ACCEPTANCE' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'DECLINED';
+}
+
+export interface IWorkerAvailabilityUpdate {
+  availabilityStatus: WorkerAvailabilityStatus;
+}
+
+export interface IWorkerProfile extends IWorker {
+  cooperative?: ICooperative;
+  skills?: IWorkerSkill[];
+  certifications?: ICertification[];
+}
+
 export interface IService {
   id: string;
   name: string;
