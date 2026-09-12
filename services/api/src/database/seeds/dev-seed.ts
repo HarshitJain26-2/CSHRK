@@ -14,6 +14,13 @@ import {
   WorkerAvailabilityStatus,
   WorkerEmploymentType,
   ProficiencyLevel,
+  MembershipStatus,
+  ContractStatus,
+  ProjectStatus,
+  JobStatus,
+  RequirementStatus,
+  TeamStatus,
+  TeamMemberRole,
 } from '@cshrk/types';
 import * as entities from '../entities';
 
@@ -314,8 +321,250 @@ async function runSeed() {
       }
     }
 
+    // 7. Phase 3: Seed Explicit Cooperative & Federation Memberships
+    const coopMemberRepo = seedDataSource.getRepository(entities.CooperativeMembershipEntity);
+    const fedMemberRepo = seedDataSource.getRepository(entities.FederationMembershipEntity);
+
+    const coopAdminUser = await userRepo.findOne({ where: { email: 'dev_coop@cshrk.local' } });
+    if (coopAdminUser) {
+      const existingCoopMember = await coopMemberRepo.findOne({
+        where: { userId: coopAdminUser.id, cooperativeId: cooperative.id },
+      });
+      if (!existingCoopMember) {
+        await coopMemberRepo.save(
+          coopMemberRepo.create({
+            userId: coopAdminUser.id,
+            cooperativeId: cooperative.id,
+            role: 'COOPERATIVE_ADMIN',
+            status: MembershipStatus.ACTIVE,
+          }),
+        );
+        console.log('Seeded CooperativeMembership for Demo Coop Admin');
+      }
+    }
+
+    const fedAdminUser = await userRepo.findOne({ where: { email: 'dev_fed@cshrk.local' } });
+    if (fedAdminUser) {
+      const existingFedMember = await fedMemberRepo.findOne({
+        where: { userId: fedAdminUser.id, federationId: federation.id },
+      });
+      if (!existingFedMember) {
+        await fedMemberRepo.save(
+          fedMemberRepo.create({
+            userId: fedAdminUser.id,
+            federationId: federation.id,
+            role: 'FEDERATION_ADMIN',
+            status: MembershipStatus.ACTIVE,
+          }),
+        );
+        console.log('Seeded FederationMembership for Demo Federation Admin');
+      }
+    }
+
+    const workerUser = await userRepo.findOne({ where: { email: 'dev_worker@cshrk.local' } });
+    if (workerUser && demoWorkerEntity) {
+      const existingWorkerMember = await coopMemberRepo.findOne({
+        where: { userId: workerUser.id, cooperativeId: cooperative.id },
+      });
+      if (!existingWorkerMember) {
+        await coopMemberRepo.save(
+          coopMemberRepo.create({
+            userId: workerUser.id,
+            cooperativeId: cooperative.id,
+            workerId: demoWorkerEntity.id,
+            memberId: 'MEM-2026-001',
+            role: 'MEMBER_WORKER',
+            status: MembershipStatus.ACTIVE,
+          }),
+        );
+        console.log('Seeded CooperativeMembership for Demo Worker');
+      }
+    }
+
+    // 8. Phase 3: Seed Second Cooperative (South Delhi) & Member Worker for Multi-Coop Testing
+    let secondCoop = await coopRepo.findOne({ where: { registrationNumber: 'COOP-SD-002' } });
+    if (!secondCoop) {
+      secondCoop = await coopRepo.save(
+        coopRepo.create({
+          federationId: federation.id,
+          name: 'South Delhi Trades & Services Society',
+          registrationNumber: 'COOP-SD-002',
+          district: 'South Delhi',
+          contactEmail: 'contact@southdelhitrades.local',
+          contactPhone: '+911188776655',
+          status: AccountStatus.ACTIVE,
+        }),
+      );
+      console.log('Created Second Seed Cooperative: South Delhi Trades & Services Society');
+    }
+
+    let secondWorkerUser = await userRepo.findOne({ where: { email: 'worker_sd@cshrk.local' } });
+    let secondWorkerEntity: entities.WorkerEntity | null = null;
+    if (!secondWorkerUser) {
+      secondWorkerUser = await userRepo.save(
+        userRepo.create({
+          email: 'worker_sd@cshrk.local',
+          fullName: 'Rajesh Kumar (South Delhi)',
+          passwordHash: defaultPassword,
+          role: UserRole.WORKER,
+          status: AccountStatus.ACTIVE,
+        }),
+      );
+      secondWorkerEntity = await workerRepo.save(
+        workerRepo.create({
+          userId: secondWorkerUser.id,
+          cooperativeId: secondCoop.id,
+          fullName: secondWorkerUser.fullName,
+          memberId: 'MEM-SD-001',
+          employmentType: WorkerEmploymentType.MEMBER_WORKER,
+          status: AccountStatus.ACTIVE,
+          availabilityStatus: WorkerAvailabilityStatus.AVAILABLE,
+          ratingAvg: 4.8,
+          totalJobs: 12,
+          currentLocation: {
+            type: 'Point',
+            coordinates: [77.2273, 28.5355], // South Delhi
+          },
+        }),
+      );
+      await coopMemberRepo.save(
+        coopMemberRepo.create({
+          userId: secondWorkerUser.id,
+          cooperativeId: secondCoop.id,
+          workerId: secondWorkerEntity.id,
+          memberId: 'MEM-SD-001',
+          role: 'MEMBER_WORKER',
+          status: MembershipStatus.ACTIVE,
+        }),
+      );
+      if (elecSkill) {
+        await workerSkillRepo.save(
+          workerSkillRepo.create({
+            workerId: secondWorkerEntity.id,
+            skillId: elecSkill.id,
+            proficiencyLevel: ProficiencyLevel.EXPERT,
+            isVerified: true,
+          }),
+        );
+      }
+      console.log('Seeded Second Worker & Membership in South Delhi Cooperative');
+    }
+
+    // 9. Phase 3: Seed Teams, Contracts, Projects, and Large Jobs
+    const teamRepo = seedDataSource.getRepository(entities.WorkerTeamEntity);
+    const teamMemberRepo = seedDataSource.getRepository(entities.TeamMemberEntity);
+    const contractRepo = seedDataSource.getRepository(entities.ContractEntity);
+    const projectRepo = seedDataSource.getRepository(entities.ProjectEntity);
+    const jobRepo = seedDataSource.getRepository(entities.LargeJobEntity);
+    const reqRepo = seedDataSource.getRepository(entities.WorkforceRequirementEntity);
+
+    let contract = await contractRepo.findOne({ where: { contractNumber: 'CNT-2026-001' } });
+    if (!contract) {
+      contract = await contractRepo.save(
+        contractRepo.create({
+          contractNumber: 'CNT-2026-001',
+          title: 'Municipal Facility Maintenance Framework',
+          clientName: 'Municipal Corporation of Delhi',
+          clientContact: 'facilities@mcd.gov.in',
+          cooperativeId: cooperative.id,
+          federationId: federation.id,
+          scope: 'Comprehensive electrical, plumbing, and facility maintenance across Delhi public buildings.',
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 90 * 24 * 3600 * 1000),
+          status: ContractStatus.ACTIVE,
+        }),
+      );
+      console.log('Created Seed Contract: CNT-2026-001');
+    }
+
+    let project = await projectRepo.findOne({ where: { title: 'Civic Center Electrical Overhaul' } });
+    if (!project) {
+      project = await projectRepo.save(
+        projectRepo.create({
+          contractId: contract.id,
+          cooperativeId: cooperative.id,
+          title: 'Civic Center Electrical Overhaul',
+          description: 'Emergency wiring, breaker replacement, and energy audit across Blocks A-C.',
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 45 * 24 * 3600 * 1000),
+          status: ProjectStatus.IN_PROGRESS,
+          address: 'MCD Civic Centre, Minto Road, New Delhi 110002',
+          location: {
+            type: 'Point',
+            coordinates: [77.2272, 28.6369],
+          },
+        }),
+      );
+      console.log('Created Seed Project: Civic Center Electrical Overhaul');
+    }
+
+    let team = await teamRepo.findOne({ where: { name: 'Delhi Alpha Electrical Crew' } });
+    if (!team && demoWorkerEntity) {
+      team = await teamRepo.save(
+        teamRepo.create({
+          cooperativeId: cooperative.id,
+          name: 'Delhi Alpha Electrical Crew',
+          description: 'Certified rapid response team for commercial switchboard and commercial wiring.',
+          leaderWorkerId: demoWorkerEntity.id,
+          projectId: project.id,
+          status: TeamStatus.ACTIVE,
+        }),
+      );
+      await teamMemberRepo.save(
+        teamMemberRepo.create({
+          teamId: team.id,
+          workerId: demoWorkerEntity.id,
+          role: TeamMemberRole.LEADER,
+        }),
+      );
+      console.log('Created Seed Team: Delhi Alpha Electrical Crew with Leader');
+    }
+
+    let largeJob = await jobRepo.findOne({ where: { title: 'Civic Center Distribution Rewiring' } });
+    if (!largeJob && elecSkill) {
+      largeJob = await jobRepo.save(
+        jobRepo.create({
+          projectId: project.id,
+          cooperativeId: cooperative.id,
+          title: 'Civic Center Distribution Rewiring',
+          organizationName: 'Municipal Corporation of Delhi',
+          skillId: elecSkill.id,
+          requiredWorkers: 4,
+          assignedWorkers: 1,
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 14 * 24 * 3600 * 1000),
+          status: JobStatus.OPEN,
+          address: 'Block B, Civic Center, New Delhi',
+          location: {
+            type: 'Point',
+            coordinates: [77.2272, 28.6369],
+          },
+        }),
+      );
+      console.log('Created Seed Large Job: Civic Center Distribution Rewiring (Operational, Zero Pricing)');
+    }
+
+    let requirement = await reqRepo.findOne({ where: { locationCity: 'Delhi' } });
+    if (!requirement && elecSkill) {
+      requirement = await reqRepo.save(
+        reqRepo.create({
+          contractId: contract.id,
+          projectId: project.id,
+          skillId: elecSkill.id,
+          quantity: 6,
+          fulfilledQuantity: 2,
+          locationCity: 'Delhi',
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 30 * 24 * 3600 * 1000),
+          status: RequirementStatus.PARTIALLY_FULFILLED,
+        }),
+      );
+      console.log('Created Seed Workforce Requirement: 6 Certified Electricians');
+    }
+
+
     console.log('================================================================');
-    console.log('  SEED COMPLETE: All 5 demo accounts ready for testing');
+    console.log('  SEED COMPLETE: Phase 0, 1, 2, and 3 test data ready');
     console.log('  Default password for all demo accounts: DevPass123!');
     console.log('================================================================');
   } catch (error) {

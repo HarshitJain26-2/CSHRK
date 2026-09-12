@@ -13,6 +13,10 @@ import { CustomerModule } from './modules/customer/customer.module';
 import { ServiceCatalogModule } from './modules/service-catalog/service-catalog.module';
 import { ServiceRequestModule } from './modules/service-request/service-request.module';
 import { BookingModule } from './modules/booking/booking.module';
+import { AuditModule } from './modules/audit/audit.module';
+import { FederationModule } from './modules/federation/federation.module';
+import { TeamModule } from './modules/team/team.module';
+import { OrgOperationsModule } from './modules/org-operations/org-operations.module';
 
 @Module({
   imports: [
@@ -31,6 +35,11 @@ import { BookingModule } from './modules/booking/booking.module';
     ServiceCatalogModule,
     ServiceRequestModule,
     BookingModule,
+    AuditModule,
+    FederationModule,
+    TeamModule,
+    OrgOperationsModule,
   ],
 })
 export class AppModule {}
+

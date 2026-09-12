@@ -99,6 +99,73 @@ export enum ComplaintStatus {
 }
 
 // ==============================================================================
+// PHASE 3 — COOPERATIVE & FEDERATION ENUMS
+// ==============================================================================
+export enum MembershipStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  INACTIVE = 'INACTIVE',
+}
+
+export enum ContractStatus {
+  DRAFT = 'DRAFT',
+  PROPOSED = 'PROPOSED',
+  ACTIVE = 'ACTIVE',
+  PAUSED = 'PAUSED',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum ProjectStatus {
+  PLANNING = 'PLANNING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  ON_HOLD = 'ON_HOLD',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum JobStatus {
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum RequirementStatus {
+  PENDING = 'PENDING',
+  FULFILLED = 'FULFILLED',
+  PARTIALLY_FULFILLED = 'PARTIALLY_FULFILLED',
+  UNFULFILLED = 'UNFULFILLED',
+}
+
+export enum TeamStatus {
+  ACTIVE = 'ACTIVE',
+  ASSIGNED = 'ASSIGNED',
+  DISBANDED = 'DISBANDED',
+}
+
+export enum TeamMemberRole {
+  LEADER = 'LEADER',
+  MEMBER = 'MEMBER',
+}
+
+export enum FulfillmentPlanStatus {
+  PROPOSED = 'PROPOSED',
+  PENDING_COOPERATIVE_APPROVAL = 'PENDING_COOPERATIVE_APPROVAL',
+  PARTIALLY_APPROVED = 'PARTIALLY_APPROVED',
+  CONFIRMED = 'CONFIRMED',
+  REJECTED = 'REJECTED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum AllocationApprovalStatus {
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
+// ==============================================================================
 // GEOMETRIC & SPATIAL TYPES (PostGIS 4326)
 // ==============================================================================
 export interface GeoPoint {
@@ -307,6 +374,208 @@ export interface IRating {
   targetId: string;
   score: number;
   comment?: string;
+  createdAt: string;
+}
+
+// ==============================================================================
+// PHASE 3 — COOPERATIVE & FEDERATION INTERFACES
+// ==============================================================================
+export interface ICooperativeMembership {
+  id: string;
+  userId: string;
+  cooperativeId: string;
+  workerId?: string;
+  memberId?: string;
+  role: string;
+  status: MembershipStatus;
+  joinedAt: string;
+  leftAt?: string;
+  verifiedBy?: string;
+  verifiedAt?: string;
+  notes?: string;
+  user?: IUser;
+  cooperative?: ICooperative;
+  worker?: IWorker;
+}
+
+export interface IFederationMembership {
+  id: string;
+  userId: string;
+  federationId: string;
+  role: string;
+  status: MembershipStatus;
+  joinedAt: string;
+  leftAt?: string;
+  user?: IUser;
+  federation?: IFederation;
+}
+
+export interface IWorkerTeam {
+  id: string;
+  cooperativeId: string;
+  name: string;
+  description?: string;
+  leaderWorkerId?: string;
+  status: TeamStatus;
+  projectId?: string;
+  members?: ITeamMember[];
+  leader?: IWorker;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ITeamMember {
+  id: string;
+  teamId: string;
+  workerId: string;
+  role: TeamMemberRole;
+  joinedAt: string;
+  worker?: IWorker;
+}
+
+export interface IContract {
+  id: string;
+  contractNumber: string;
+  title: string;
+  clientName: string;
+  clientContact?: string;
+  cooperativeId?: string;
+  federationId?: string;
+  scope: string;
+  startDate: string;
+  endDate: string;
+  status: ContractStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IProject {
+  id: string;
+  contractId?: string;
+  cooperativeId: string;
+  title: string;
+  description: string;
+  location?: GeoPoint;
+  address?: string;
+  startDate: string;
+  endDate: string;
+  status: ProjectStatus;
+  contract?: IContract;
+  teams?: IWorkerTeam[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ILargeJob {
+  id: string;
+  projectId?: string;
+  cooperativeId: string;
+  title: string;
+  organizationName: string;
+  skillId: string;
+  requiredWorkers: number;
+  assignedWorkers: number;
+  startDate: string;
+  endDate: string;
+  location?: GeoPoint;
+  address?: string;
+  status: JobStatus;
+  skill?: ISkill;
+  project?: IProject;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IWorkforceRequirement {
+  id: string;
+  contractId?: string;
+  projectId?: string;
+  skillId: string;
+  quantity: number;
+  fulfilledQuantity: number;
+  locationCity: string;
+  startDate: string;
+  endDate: string;
+  status: RequirementStatus;
+  skill?: ISkill;
+  contract?: IContract;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IFulfillmentPlan {
+  id: string;
+  requirementId: string;
+  federationId: string;
+  title: string;
+  notes?: string;
+  status: FulfillmentPlanStatus;
+  allocations?: IFulfillmentAllocation[];
+  requirement?: IWorkforceRequirement;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IFulfillmentAllocation {
+  id: string;
+  planId: string;
+  cooperativeId: string;
+  allocatedWorkers: number;
+  status: AllocationApprovalStatus;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+  cooperative?: ICooperative;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IWorkforceCapacity {
+  cooperativeId: string;
+  skillId?: string;
+  timeWindow?: {
+    startDate: string;
+    endDate: string;
+  };
+  totalWorkforce: number;
+  activeWorkforce: number;
+  availableWorkers: number;
+  committedWorkforce: number;
+  unavailableWorkers: number;
+  availableCapacity: number;
+  bySkill?: Array<{
+    skillId: string;
+    skillName: string;
+    total: number;
+    available: number;
+    committed: number;
+  }>;
+}
+
+export interface IFederationCapacity {
+  federationId: string;
+  totalCooperatives: number;
+  totalWorkforce: number;
+  activeWorkforce: number;
+  availableWorkers: number;
+  committedWorkforce: number;
+  availableCapacity: number;
+  cooperatives: Array<{
+    cooperativeId: string;
+    cooperativeName: string;
+    district: string;
+    capacity: IWorkforceCapacity;
+  }>;
+}
+
+export interface IAuditLog {
+  id: string;
+  userId?: string;
+  action: string;
+  entityType: string;
+  entityId?: string;
+  ipAddress?: string;
+  metadata?: Record<string, any>;
   createdAt: string;
 }
 
