@@ -37,6 +37,7 @@ export type ViewType =
   | 'add-coop'
   | 'edit-coop'
   | 'reports'
+  | 'marketplace'
   | 'global-search'
   | 'empty-states'
   | 'loading-states'

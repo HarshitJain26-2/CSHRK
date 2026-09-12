@@ -74,7 +74,28 @@ CSHRK/
 - Python >= 3.11 (Python 3.13 recommended)
 - Docker Desktop with Docker Compose
 
-### Step-by-Step Setup
+### ⚡ Instant All-in-One Start (Recommended)
+You can launch the entire stack (Postgres container, package build, database seed, NestJS API, Vite Admin Web, and FastAPI AI Service) with a **single command**:
+
+```bash
+# Using npm
+npm run dev
+
+# Or with database seed enabled
+npm run dev -- --seed
+
+# Or with mobile dev servers included
+npm run dev -- --seed --customer --worker
+```
+
+On Windows PowerShell:
+```powershell
+.\start-all.ps1 -Seed -Customer -Worker
+```
+
+---
+
+### Step-by-Step Manual Setup
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/HarshitJain26-2/CSHRK.git
@@ -108,7 +129,7 @@ CSHRK/
    npm run db:seed --workspace=@cshrk/api
    ```
 
-7. **Start services**:
+7. **Start individual services manually**:
    - Backend API (`http://localhost:3000`):
      ```bash
      npm run start:api
@@ -121,6 +142,7 @@ CSHRK/
      ```bash
      npm run start:admin
      ```
+
 
 ---
 

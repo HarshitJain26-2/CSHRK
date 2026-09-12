@@ -15,6 +15,12 @@ export class CustomerEntity extends CshrkBaseEntity {
   @Column({ name: 'full_name', type: 'varchar', length: 255 })
   fullName: string;
 
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  phone?: string;
+
+  @Column({ type: 'text', nullable: true })
+  address?: string;
+
   @Column({
     type: 'geometry',
     spatialFeatureType: 'Point',

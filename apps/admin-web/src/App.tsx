@@ -33,6 +33,7 @@ import { AddCooperativeView } from './views/AddCooperativeView';
 import { EditCooperativeView } from './views/EditCooperativeView';
 
 import { ReportsView } from './views/ReportsView';
+import { MarketplaceMonitoringView } from './views/MarketplaceMonitoringView';
 import { GlobalSearchView } from './views/GlobalSearchView';
 
 import { EmptyStatesView } from './views/EmptyStatesView';
@@ -102,6 +103,8 @@ const MainAppContent: React.FC = () => {
       // 15-16: Reports & Global Search
       case 'reports':
         return <ReportsView />;
+      case 'marketplace':
+        return <MarketplaceMonitoringView />;
       case 'global-search':
         return <GlobalSearchView />;
 

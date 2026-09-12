@@ -263,7 +263,7 @@ describe('WorkerService (Phase 1 Unit Tests)', () => {
         reason: 'Too far from current location',
       });
       expect(response.message).toContain('declined');
-      expect(response.status).toBe(BookingStatus.CANCELLED);
+      expect(response.status).toBe(BookingStatus.REJECTED);
     });
   });
 

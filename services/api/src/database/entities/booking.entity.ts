@@ -39,7 +39,7 @@ export class BookingEntity extends CshrkBaseEntity {
   @Column({
     type: 'enum',
     enum: BookingStatus,
-    default: BookingStatus.CONFIRMED,
+    default: BookingStatus.PENDING_ACCEPTANCE,
   })
   status: BookingStatus;
 

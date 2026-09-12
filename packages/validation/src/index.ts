@@ -82,6 +82,37 @@ export const jobAssignmentResponseSchema = z.object({
   reason: z.string().optional(),
 });
 
+// Phase 2 Customer & Marketplace Schemas
+export const updateCustomerProfileSchema = z.object({
+  fullName: z.string().min(2, 'Full name must be at least 2 characters').optional(),
+  phone: phoneSchema,
+  address: z.string().min(3, 'Address must be at least 3 characters').optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+});
+
+export const createServiceRequestSchema = z.object({
+  serviceId: z.string().uuid('Invalid service ID format'),
+  description: z.string().min(5, 'Description must be at least 5 characters'),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  addressText: z.string().min(3, 'Address must be at least 3 characters').optional(),
+  urgency: z.enum(['STANDARD', 'URGENT', 'EMERGENCY']).default('STANDARD'),
+  scheduledTime: z.string().datetime().optional(),
+});
+
+export const createBookingSchema = z.object({
+  serviceRequestId: z.string().uuid('Invalid service request ID format'),
+  workerId: z.string().uuid('Invalid worker ID format'),
+  startTime: z.string().datetime().optional(),
+  durationHours: z.number().positive().default(2),
+});
+
+export const rateBookingSchema = z.object({
+  score: z.number().int().min(1, 'Score must be between 1 and 5').max(5, 'Score must be between 1 and 5'),
+  comment: z.string().max(1000).optional(),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type GeoPointInput = z.infer<typeof geoPointSchema>;
@@ -92,4 +123,8 @@ export type WorkerOnboardInput = z.infer<typeof workerOnboardSchema>;
 export type AddWorkerSkillInput = z.infer<typeof addWorkerSkillSchema>;
 export type VerifyWorkerSkillInput = z.infer<typeof verifyWorkerSkillSchema>;
 export type JobAssignmentResponseInput = z.infer<typeof jobAssignmentResponseSchema>;
+export type UpdateCustomerProfileInput = z.infer<typeof updateCustomerProfileSchema>;
+export type CreateServiceRequestInput = z.infer<typeof createServiceRequestSchema>;
+export type CreateBookingInput = z.infer<typeof createBookingSchema>;
+export type RateBookingInput = z.infer<typeof rateBookingSchema>;
 

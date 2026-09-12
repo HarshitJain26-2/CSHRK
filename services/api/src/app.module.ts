@@ -9,6 +9,10 @@ import { WorkerModule } from './modules/worker/worker.module';
 import { SkillModule } from './modules/skill/skill.module';
 import { CertificationModule } from './modules/certification/certification.module';
 import { CooperativeModule } from './modules/cooperative/cooperative.module';
+import { CustomerModule } from './modules/customer/customer.module';
+import { ServiceCatalogModule } from './modules/service-catalog/service-catalog.module';
+import { ServiceRequestModule } from './modules/service-request/service-request.module';
+import { BookingModule } from './modules/booking/booking.module';
 
 @Module({
   imports: [
@@ -23,6 +27,10 @@ import { CooperativeModule } from './modules/cooperative/cooperative.module';
     SkillModule,
     CertificationModule,
     CooperativeModule,
+    CustomerModule,
+    ServiceCatalogModule,
+    ServiceRequestModule,
+    BookingModule,
   ],
 })
 export class AppModule {}

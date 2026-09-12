@@ -229,8 +229,12 @@ export class WorkerService {
         status: booking.status,
       };
     } else {
-      booking.status = BookingStatus.CANCELLED;
+      booking.status = BookingStatus.REJECTED;
       await this.bookingRepository.save(booking);
+
+      worker.availabilityStatus = WorkerAvailabilityStatus.AVAILABLE;
+      await this.workerRepository.save(worker);
+
       return {
         message: 'Job assignment declined and returned to dispatch queue',
         bookingId,

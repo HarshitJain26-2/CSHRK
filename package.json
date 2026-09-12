@@ -18,6 +18,8 @@
     "start:admin": "npm run dev --workspace=@cshrk/admin-web",
     "start:customer": "npm run start --workspace=@cshrk/customer-mobile",
     "start:worker": "npm run start --workspace=@cshrk/worker-mobile",
+    "start:all": "node scripts/start-all.js",
+    "dev": "node scripts/start-all.js",
     "docker:up": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
     "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down"
   },

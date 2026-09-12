@@ -31,6 +31,12 @@ export class ServiceRequestEntity extends CshrkBaseEntity {
   })
   location?: any;
 
+  @Column({ name: 'address_text', type: 'text', nullable: true })
+  addressText?: string;
+
+  @Column({ type: 'varchar', length: 50, default: 'STANDARD' })
+  urgency: string;
+
   @Column({ name: 'scheduled_time', type: 'timestamptz', nullable: true })
   scheduledTime?: Date;
 

@@ -1,5 +1,6 @@
-import { Entity, Column } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { CshrkBaseEntity } from '../../common/entities/base.entity';
+import { SkillEntity } from './skill.entity';
 
 @Entity('services')
 export class ServiceEntity extends CshrkBaseEntity {
@@ -20,4 +21,11 @@ export class ServiceEntity extends CshrkBaseEntity {
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
+
+  @Column({ name: 'skill_id', type: 'uuid', nullable: true })
+  skillId?: string;
+
+  @ManyToOne(() => SkillEntity, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'skill_id' })
+  skill?: SkillEntity;
 }

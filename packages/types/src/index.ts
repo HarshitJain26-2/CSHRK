@@ -56,10 +56,15 @@ export enum ServiceRequestStatus {
 }
 
 export enum BookingStatus {
+  REQUESTED = 'REQUESTED',
+  MATCHED = 'MATCHED',
+  PENDING_ACCEPTANCE = 'PENDING_ACCEPTANCE',
   CONFIRMED = 'CONFIRMED',
+  SCHEDULED = 'SCHEDULED',
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
+  REJECTED = 'REJECTED',
   DISPUTED = 'DISPUTED',
 }
 
@@ -112,6 +117,7 @@ export interface GeoPolygon {
 export interface IUser {
   id: string;
   email: string;
+  fullName?: string;
   phone?: string;
   role: UserRole;
   status: AccountStatus;
@@ -149,8 +155,11 @@ export interface ICustomer {
   id: string;
   userId: string;
   fullName: string;
+  phone?: string;
+  address?: string;
   defaultLocation?: GeoPoint;
   status: AccountStatus;
+  user?: IUser;
   createdAt: string;
   updatedAt: string;
 }
@@ -234,6 +243,71 @@ export interface IService {
   basePrice: number;
   unit: string;
   isActive: boolean;
+  skillId?: string;
+  skill?: ISkill;
+}
+
+export interface IServiceCategory {
+  name: string;
+  count: number;
+  description?: string;
+}
+
+export interface IServiceRequest {
+  id: string;
+  customerId: string;
+  serviceId: string;
+  description?: string;
+  location?: any;
+  addressText?: string;
+  urgency?: 'STANDARD' | 'URGENT' | 'EMERGENCY';
+  scheduledTime?: string;
+  status: ServiceRequestStatus;
+  customer?: ICustomer;
+  service?: IService;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IBookingCandidate {
+  workerId: string;
+  userId: string;
+  fullName: string;
+  cooperativeName: string;
+  memberId?: string;
+  ratingAvg: number;
+  totalJobs: number;
+  distanceKm: number;
+  verifiedSkillName: string;
+  proficiencyLevel: ProficiencyLevel;
+}
+
+export interface IBooking {
+  id: string;
+  serviceRequestId: string;
+  customerId: string;
+  workerId?: string;
+  cooperativeId?: string;
+  status: BookingStatus;
+  totalAmount: number;
+  startTime?: string;
+  endTime?: string;
+  serviceRequest?: IServiceRequest;
+  customer?: ICustomer;
+  worker?: IWorkerProfile;
+  cooperative?: ICooperative;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IRating {
+  id: string;
+  bookingId: string;
+  reviewerId: string;
+  targetId: string;
+  score: number;
+  comment?: string;
+  createdAt: string;
 }
 
 // ==============================================================================

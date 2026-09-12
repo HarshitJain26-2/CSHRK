@@ -38,6 +38,12 @@ export const Sidebar: React.FC = () => {
       matchViews: ['cooperatives', 'coop-details', 'coop-members', 'add-coop', 'edit-coop'],
     },
     {
+      id: 'marketplace' as ViewType,
+      label: 'Marketplace',
+      icon: 'storefront',
+      matchViews: ['marketplace'],
+    },
+    {
       id: 'reports' as ViewType,
       label: 'Reports',
       icon: 'bar_chart',
