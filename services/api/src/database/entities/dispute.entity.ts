@@ -1,12 +1,14 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { ComplaintStatus } from '@cshrk/types';
+import { Entity, Column, ManyToOne, OneToMany, JoinColumn, Index } from 'typeorm';
+import { DisputeStatus, DisputeResolution } from '@cshrk/types';
 import { CshrkBaseEntity } from '../../common/entities/base.entity';
 import { BookingEntity } from './booking.entity';
 import { UserEntity } from './user.entity';
 import { CooperativeEntity } from './cooperative.entity';
+import { DisputeEvidenceEntity } from './dispute-evidence.entity';
 
-@Entity('complaints')
-export class ComplaintEntity extends CshrkBaseEntity {
+@Entity('disputes')
+@Index(['bookingId'])
+export class DisputeEntity extends CshrkBaseEntity {
   @Column({ name: 'booking_id', type: 'uuid' })
   bookingId: string;
 
@@ -14,18 +16,19 @@ export class ComplaintEntity extends CshrkBaseEntity {
   @JoinColumn({ name: 'booking_id' })
   booking: BookingEntity;
 
-  @Column({ name: 'raised_by_id', type: 'uuid' })
-  raisedById: string;
+  @Column({ name: 'initiator_id', type: 'uuid' })
+  initiatorId: string;
 
   @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'raised_by_id' })
-  raisedBy: UserEntity;
+  @JoinColumn({ name: 'initiator_id' })
+  initiator: UserEntity;
 
-  @Column({ name: 'worker_id', type: 'uuid', nullable: true })
-  workerId?: string;
+  @Column({ name: 'respondent_id', type: 'uuid', nullable: true })
+  respondentId?: string;
 
-  @Column({ name: 'customer_id', type: 'uuid', nullable: true })
-  customerId?: string;
+  @ManyToOne(() => UserEntity, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'respondent_id' })
+  respondent?: UserEntity;
 
   @Column({ name: 'cooperative_id', type: 'uuid', nullable: true })
   cooperativeId?: string;
@@ -34,18 +37,25 @@ export class ComplaintEntity extends CshrkBaseEntity {
   @JoinColumn({ name: 'cooperative_id' })
   cooperative?: CooperativeEntity;
 
-  @Column({ type: 'varchar', length: 100 })
-  category: string;
+  @Column({
+    type: 'enum',
+    enum: DisputeStatus,
+    default: DisputeStatus.OPEN,
+  })
+  status: DisputeStatus;
 
   @Column({ type: 'text' })
-  description: string;
+  reason: string;
+
+  @Column({ name: 'disputed_amount', type: 'decimal', precision: 10, scale: 2 })
+  disputedAmount: number;
 
   @Column({
     type: 'enum',
-    enum: ComplaintStatus,
-    default: ComplaintStatus.OPEN,
+    enum: DisputeResolution,
+    nullable: true,
   })
-  status: ComplaintStatus;
+  resolution?: DisputeResolution;
 
   @Column({ name: 'resolution_notes', type: 'text', nullable: true })
   resolutionNotes?: string;
@@ -59,5 +69,7 @@ export class ComplaintEntity extends CshrkBaseEntity {
 
   @Column({ name: 'resolved_at', type: 'timestamptz', nullable: true })
   resolvedAt?: Date;
-}
 
+  @OneToMany(() => DisputeEvidenceEntity, (evidence) => evidence.dispute, { cascade: true })
+  evidences: DisputeEvidenceEntity[];
+}
