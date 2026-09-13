@@ -54,3 +54,25 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly string[]> = {
     'system:health:read',
   ],
 };
+
+export const PAYMENT_CONFIG = {
+  SANDBOX_PROVIDER: 'SANDBOX',
+  RAZORPAY_PROVIDER: 'RAZORPAY',
+  STRIPE_PROVIDER: 'STRIPE',
+  DEFAULT_CURRENCY: 'INR',
+  DEFAULT_TAX_RATE: 0.18,
+  DEFAULT_FINANCIAL_POLICY: {
+    VERSION: 'POL-2026-V1',
+    WORKER_SHARE_PCT: 0.85,
+    COOPERATIVE_SHARE_PCT: 0.10,
+    PLATFORM_FEE_PCT: 0.05,
+  },
+} as const;
+
+export const AI_CONFIG = {
+  DEFAULT_SERVICE_URL: 'http://localhost:8000',
+  TIMEOUT_MS: 3000,
+  MIN_HISTORICAL_DAYS_FORECAST: 14,
+  FALLBACK_STRATEGY: 'POSTGIS_DETERMINISTIC',
+} as const;
+

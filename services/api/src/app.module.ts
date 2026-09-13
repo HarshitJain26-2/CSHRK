@@ -17,8 +17,12 @@ import { AuditModule } from './modules/audit/audit.module';
 import { FederationModule } from './modules/federation/federation.module';
 import { TeamModule } from './modules/team/team.module';
 import { OrgOperationsModule } from './modules/org-operations/org-operations.module';
+import { PaymentModule } from './modules/payment/payment.module';
+import { AIClientModule } from './modules/ai-client/ai-client.module';
 
 @Module({
+
+
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
@@ -39,7 +43,11 @@ import { OrgOperationsModule } from './modules/org-operations/org-operations.mod
     FederationModule,
     TeamModule,
     OrgOperationsModule,
+    PaymentModule,
+    AIClientModule,
   ],
 })
 export class AppModule {}
+
+
 

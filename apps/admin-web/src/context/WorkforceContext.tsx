@@ -44,12 +44,15 @@ export type ViewType =
   | 'contracts'
   | 'federation'
   | 'audit-log'
+  | 'finance'
+  | 'ai-intelligence'
   | 'global-search'
   | 'empty-states'
   | 'loading-states'
   | 'error-states'
   | 'confirmation-dialogs'
   | 'success-notifications';
+
 
 
 export interface ToastItem {

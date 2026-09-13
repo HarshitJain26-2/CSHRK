@@ -42,6 +42,8 @@ import { LargeJobsProjectsView } from './views/LargeJobsProjectsView';
 import { ContractsView } from './views/ContractsView';
 import { FederationDashboardView } from './views/FederationDashboardView';
 import { AuditLogView } from './views/AuditLogView';
+import { FinanceManagementView } from './views/FinanceManagementView';
+import { AILabourIntelligenceView } from './views/AILabourIntelligenceView';
 
 import { EmptyStatesView } from './views/EmptyStatesView';
 
@@ -129,6 +131,10 @@ const MainAppContent: React.FC = () => {
         return <FederationDashboardView />;
       case 'audit-log':
         return <AuditLogView />;
+      case 'finance':
+        return <FinanceManagementView />;
+      case 'ai-intelligence':
+        return <AILabourIntelligenceView />;
 
       // 17-21: State Views & Interactive Dialogs
 

@@ -214,6 +214,67 @@ export const updateMembershipStatusSchema = z.object({
   notes: z.string().optional(),
 });
 
+// ==============================================================================
+// PHASE 4 — FINANCIAL & PAYMENT VALIDATION SCHEMAS
+// ==============================================================================
+export const initiatePaymentSchema = z.object({
+  bookingId: z.string().uuid('Invalid booking ID format'),
+  idempotencyKey: z.string().min(8, 'Idempotency key must be at least 8 characters'),
+  paymentMethod: z.string().optional().default('UPI'),
+});
+
+export const verifyPaymentSchema = z.object({
+  paymentId: z.string().uuid('Invalid payment ID format'),
+  intentId: z.string().min(1, 'Intent ID is required'),
+  providerRef: z.string().min(1, 'Provider reference is required'),
+  signature: z.string().min(1, 'Signature is required'),
+});
+
+export const createRefundSchema = z.object({
+  paymentId: z.string().uuid('Invalid payment ID format'),
+  amount: z.number().positive('Refund amount must be positive'),
+  reason: z.string().min(3, 'Reason must be at least 3 characters'),
+});
+
+export const createFinancialPolicySchema = z.object({
+  version: z.string().min(3, 'Policy version must be at least 3 characters'),
+  effectiveFrom: z.string().datetime(),
+  effectiveTo: z.string().datetime().optional(),
+  workerSharePct: z.number().min(0).max(1),
+  cooperativeSharePct: z.number().min(0).max(1),
+  platformFeePct: z.number().min(0).max(1),
+  notes: z.string().optional(),
+}).refine(
+  (data) => Math.abs((data.workerSharePct + data.cooperativeSharePct + data.platformFeePct) - 1.0) < 0.0001,
+  { message: 'Sum of shares (worker + cooperative + platform) must equal exactly 1.0 (100%)' }
+);
+
+export const reconciliationQuerySchema = z.object({
+  periodStart: z.string().datetime(),
+  periodEnd: z.string().datetime(),
+});
+
+// ==============================================================================
+// PHASE 4 — AI LABOUR INTELLIGENCE VALIDATION SCHEMAS
+// ==============================================================================
+export const demandForecastQuerySchema = z.object({
+  districtCode: z.string().min(2, 'District code must be at least 2 characters'),
+  category: z.string().min(2, 'Category must be at least 2 characters'),
+  forecastDaysAhead: z.coerce.number().int().min(1).max(90).default(7),
+});
+
+export const workforceAllocationQuerySchema = z.object({
+  cooperativeId: z.string().uuid('Invalid cooperative ID'),
+  targetDate: z.string().datetime(),
+  jobIds: z.array(z.string().uuid()).min(1, 'Must provide at least one job ID'),
+  availableWorkerIds: z.array(z.string().uuid()).min(1, 'Must provide at least one worker ID'),
+});
+
+export const skillGapQuerySchema = z.object({
+  districtCode: z.string().min(2, 'District code must be at least 2 characters'),
+  lookbackDays: z.coerce.number().int().min(7).max(180).default(30),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type GeoPointInput = z.infer<typeof geoPointSchema>;
@@ -240,5 +301,15 @@ export type CreateWorkforceRequirementInput = z.infer<typeof createWorkforceRequ
 export type CreateFulfillmentProposalInput = z.infer<typeof createFulfillmentProposalSchema>;
 export type RespondFulfillmentAllocationInput = z.infer<typeof respondFulfillmentAllocationSchema>;
 export type UpdateMembershipStatusInput = z.infer<typeof updateMembershipStatusSchema>;
+
+export type InitiatePaymentInput = z.infer<typeof initiatePaymentSchema>;
+export type VerifyPaymentInput = z.infer<typeof verifyPaymentSchema>;
+export type CreateRefundInput = z.infer<typeof createRefundSchema>;
+export type CreateFinancialPolicyInput = z.infer<typeof createFinancialPolicySchema>;
+export type ReconciliationQueryInput = z.infer<typeof reconciliationQuerySchema>;
+export type DemandForecastQueryInput = z.infer<typeof demandForecastQuerySchema>;
+export type WorkforceAllocationQueryInput = z.infer<typeof workforceAllocationQuerySchema>;
+export type SkillGapQueryInput = z.infer<typeof skillGapQuerySchema>;
+
 
 

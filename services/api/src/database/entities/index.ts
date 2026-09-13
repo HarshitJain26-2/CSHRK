@@ -26,3 +26,10 @@ export * from './large-job.entity';
 export * from './workforce-requirement.entity';
 export * from './fulfillment-plan.entity';
 export * from './fulfillment-allocation.entity';
+export * from './financial-policy.entity';
+export * from './payment-webhook-event.entity';
+export * from './refund.entity';
+export * from './reconciliation-record.entity';
+export * from './ai-inference-log.entity';
+export * from './ai-model-version.entity';
+

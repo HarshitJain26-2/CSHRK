@@ -4,6 +4,8 @@ import { ServiceRequestEntity } from '../../database/entities/service-request.en
 import { ServiceEntity } from '../../database/entities/service.entity';
 import { WorkerEntity } from '../../database/entities/worker.entity';
 import { CustomerModule } from '../customer/customer.module';
+
+import { AIClientModule } from '../ai-client/ai-client.module';
 import { ServiceRequestController } from './service-request.controller';
 import { ServiceRequestService } from './service-request.service';
 
@@ -15,7 +17,9 @@ import { ServiceRequestService } from './service-request.service';
       WorkerEntity,
     ]),
     CustomerModule,
+    AIClientModule,
   ],
+
   controllers: [ServiceRequestController],
   providers: [ServiceRequestService],
   exports: [ServiceRequestService],

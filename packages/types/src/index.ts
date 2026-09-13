@@ -72,10 +72,22 @@ export enum BookingStatus {
 // FINANCIAL & AUDIT ENUMS
 // ==============================================================================
 export enum PaymentStatus {
+  INITIATED = 'INITIATED',
+  PENDING = 'PENDING',
+  AUTHORIZED = 'AUTHORIZED',
+  PAID = 'PAID',
+  FAILED = 'FAILED',
+  EXPIRED = 'EXPIRED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED',
+  PARTIALLY_REFUNDED = 'PARTIALLY_REFUNDED',
+  DISPUTED = 'DISPUTED',
+}
+
+export enum RefundStatus {
   PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
-  REFUNDED = 'REFUNDED',
 }
 
 export enum InvoiceStatus {
@@ -89,6 +101,27 @@ export enum SettlementStatus {
   PENDING = 'PENDING',
   PROCESSED = 'PROCESSED',
   FAILED = 'FAILED',
+}
+
+export enum FinancialPolicyStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+  RETIRED = 'RETIRED',
+}
+
+export enum ReconciliationDiscrepancyType {
+  MATCHED = 'MATCHED',
+  AMOUNT_MISMATCH = 'AMOUNT_MISMATCH',
+  MISSING_IN_PLATFORM = 'MISSING_IN_PLATFORM',
+  MISSING_IN_GATEWAY = 'MISSING_IN_GATEWAY',
+  INCONSISTENT_STATUS = 'INCONSISTENT_STATUS',
+  UNSETTLED_COMPLETED_PAYMENT = 'UNSETTLED_COMPLETED_PAYMENT',
+}
+
+export enum ReconciliationResolutionStatus {
+  UNRESOLVED = 'UNRESOLVED',
+  RESOLVED = 'RESOLVED',
+  FLAGGED_FOR_AUDIT = 'FLAGGED_FOR_AUDIT',
 }
 
 export enum ComplaintStatus {
@@ -347,7 +380,10 @@ export interface IBookingCandidate {
   distanceKm: number;
   verifiedSkillName: string;
   proficiencyLevel: ProficiencyLevel;
+  matchScore?: number;
+  explanations?: string[];
 }
+
 
 export interface IBooking {
   id: string;
@@ -576,6 +612,228 @@ export interface IAuditLog {
   entityId?: string;
   ipAddress?: string;
   metadata?: Record<string, any>;
+  createdAt: string;
+}
+
+// ==============================================================================
+// PHASE 4 — FINANCIAL & PAYMENT INTERFACES
+// ==============================================================================
+export interface IFinancialPolicy {
+  id: string;
+  version: string;
+  effectiveFrom: string;
+  effectiveTo?: string;
+  workerSharePct: number;
+  cooperativeSharePct: number;
+  platformFeePct: number;
+  status: FinancialPolicyStatus;
+  approvedBy?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ITaxPolicy {
+  id: string;
+  name: string;
+  category?: string;
+  rate: number;
+  isExempt: boolean;
+  description?: string;
+}
+
+export interface IPayment {
+  id: string;
+  bookingId: string;
+  invoiceId?: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  provider: string;
+  intentId?: string;
+  idempotencyKey?: string;
+  paymentMethod?: string;
+  transactionRef?: string;
+  paidAt?: string;
+  failureReason?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IPaymentWebhookEvent {
+  id: string;
+  provider: string;
+  eventId: string;
+  eventType: string;
+  payload: Record<string, any>;
+  signature?: string;
+  isVerified: boolean;
+  isProcessed: boolean;
+  processedAt?: string;
+  createdAt: string;
+}
+
+export interface IInvoice {
+  id: string;
+  bookingId: string;
+  customerId?: string;
+  cooperativeId?: string;
+  invoiceNumber: string;
+  subtotal: number;
+  discountAmount: number;
+  taxableAmount: number;
+  taxRate: number;
+  taxAmount: number;
+  totalAmount: number;
+  status: InvoiceStatus;
+  paidAt?: string;
+  notes?: string;
+  booking?: IBooking;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IRefund {
+  id: string;
+  paymentId: string;
+  amount: number;
+  reason: string;
+  status: RefundStatus;
+  providerRefundId?: string;
+  createdById?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ISettlement {
+  id: string;
+  cooperativeId: string;
+  workerId: string;
+  bookingId?: string;
+  paymentId?: string;
+  financialPolicyId?: string;
+  policyVersionApplied?: string;
+  grossAmount: number;
+  workerAmount: number;
+  cooperativeFee: number;
+  platformFee: number;
+  status: SettlementStatus;
+  periodStart?: string;
+  periodEnd?: string;
+  paidOutAt?: string;
+  payoutReference?: string;
+  worker?: IWorker;
+  cooperative?: ICooperative;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IReconciliationRecord {
+  id: string;
+  periodStart: string;
+  periodEnd: string;
+  discrepancyType: ReconciliationDiscrepancyType;
+  platformPaymentId?: string;
+  gatewayTransactionId?: string;
+  platformAmount?: number;
+  gatewayAmount?: number;
+  amountDiff?: number;
+  resolutionStatus: ReconciliationResolutionStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ==============================================================================
+// PHASE 4 — AI LABOUR INTELLIGENCE INTERFACES
+// ==============================================================================
+export interface IAIWorkerMatchCandidate {
+  workerId: string;
+  cooperativeId: string;
+  matchScore: number;
+  distanceKm: number;
+  skillFitScore: number;
+  reliabilityScore: number;
+  explanations: string[];
+}
+
+export interface IAIWorkerMatchResponse {
+  serviceRequestId: string;
+  candidates: IAIWorkerMatchCandidate[];
+  algorithmVersion: string;
+  fallbackUsed: boolean;
+}
+
+export interface IDailyDemandPrediction {
+  date: string;
+  expectedRequests: number;
+  confidenceIntervalLower: number;
+  confidenceIntervalUpper: number;
+}
+
+export interface IAIDemandForecast {
+  districtCode: string;
+  category: string;
+  status: 'SUCCESS' | 'INSUFFICIENT_DATA';
+  predictions: IDailyDemandPrediction[];
+  modelVersion: string;
+  evaluationMetrics?: {
+    mae: number;
+    rmse: number;
+    mape: number;
+  };
+  notes?: string;
+}
+
+export interface IAllocationAssignment {
+  jobId: string;
+  assignedWorkerId: string;
+  optimizationMetricScore: number;
+}
+
+export interface IAIWorkforceAllocationRecommendation {
+  cooperativeId: string;
+  assignments: IAllocationAssignment[];
+  unassignedJobs: string[];
+  optimizationEngine: string;
+  requiresCooperativeApproval: boolean;
+  status: 'RECOMMENDED' | 'SUBMITTED_AS_PROPOSAL' | 'APPROVED' | 'REJECTED';
+}
+
+export interface ISkillDeficit {
+  skillName: string;
+  skillCode: string;
+  unfulfilledRequestCount: number;
+  recommendedTrainees: number;
+  severity: 'CRITICAL' | 'MODERATE' | 'ADEQUATE';
+}
+
+export interface IAISkillGapReport {
+  districtCode: string;
+  deficits: ISkillDeficit[];
+  analysisEngine: string;
+  generatedAt: string;
+}
+
+export interface IAIModelMetadata {
+  modelName: string;
+  version: string;
+  featureSchema?: Record<string, any>;
+  trainingDatasetRef?: string;
+  evaluationMetrics?: Record<string, number>;
+  status: 'ACTIVE' | 'DEPRECATED' | 'EVALUATING';
+  createdAt: string;
+}
+
+export interface IAIInferenceLog {
+  id: string;
+  taskType: 'MATCHING' | 'FORECASTING' | 'ALLOCATION' | 'SKILL_GAP';
+  modelVersion: string;
+  inputHash: string;
+  outputSummary?: Record<string, any>;
+  latencyMs: number;
+  fallbackUsed: boolean;
   createdAt: string;
 }
 

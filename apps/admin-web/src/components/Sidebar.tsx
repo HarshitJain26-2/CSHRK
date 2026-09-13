@@ -74,6 +74,18 @@ export const Sidebar: React.FC = () => {
       matchViews: ['marketplace'],
     },
     {
+      id: 'finance' as ViewType,
+      label: 'Finance & Payments',
+      icon: 'payments',
+      matchViews: ['finance'],
+    },
+    {
+      id: 'ai-intelligence' as ViewType,
+      label: 'AI Intelligence',
+      icon: 'auto_awesome',
+      matchViews: ['ai-intelligence'],
+    },
+    {
       id: 'audit-log' as ViewType,
       label: 'Audit & Governance',
       icon: 'verified_user',
