@@ -19,10 +19,14 @@ import { TeamModule } from './modules/team/team.module';
 import { OrgOperationsModule } from './modules/org-operations/org-operations.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { AIClientModule } from './modules/ai-client/ai-client.module';
+import { CommunicationModule } from './modules/communication/communication.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { TrustSafetyModule } from './modules/trust-safety/trust-safety.module';
+import { EmergencyModule } from './modules/emergency/emergency.module';
+import { WelfareOperationsModule } from './modules/welfare-operations/welfare-operations.module';
+import { ResilienceModule } from './modules/resilience/resilience.module';
 
 @Module({
-
-
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
@@ -45,6 +49,12 @@ import { AIClientModule } from './modules/ai-client/ai-client.module';
     OrgOperationsModule,
     PaymentModule,
     AIClientModule,
+    CommunicationModule,
+    NotificationModule,
+    TrustSafetyModule,
+    EmergencyModule,
+    WelfareOperationsModule,
+    ResilienceModule,
   ],
 })
 export class AppModule {}
