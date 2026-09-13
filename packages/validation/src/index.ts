@@ -4,6 +4,22 @@ import {
   WorkerAvailabilityStatus,
   WorkerEmploymentType,
   ProficiencyLevel,
+  ConversationType,
+  ConversationStatus,
+  MessageStatus,
+  NotificationChannel,
+  NotificationEventType,
+  NotificationPriority,
+  ComplaintStatus,
+  DisputeStatus,
+  DisputeResolution,
+  AccountRestrictionType,
+  SosCategory,
+  SosPriority,
+  SosStatus,
+  SupportRequestCategory,
+  SupportRequestStatus,
+  OfflineSyncOperationType,
 } from '@cshrk/types';
 
 // Password criteria: min 8 chars, at least 1 number, at least 1 letter
@@ -310,6 +326,173 @@ export type ReconciliationQueryInput = z.infer<typeof reconciliationQuerySchema>
 export type DemandForecastQueryInput = z.infer<typeof demandForecastQuerySchema>;
 export type WorkforceAllocationQueryInput = z.infer<typeof workforceAllocationQuerySchema>;
 export type SkillGapQueryInput = z.infer<typeof skillGapQuerySchema>;
+
+// ==============================================================================
+// PHASE 5 — OPERATIONS, TRUST, COMMUNICATIONS & RESILIENCE SCHEMAS
+// ==============================================================================
+
+// Secure Attachment Schema (Allowlist: images & pdf, max 5MB, SHA-256)
+export const attachmentMetadataSchema = z.object({
+  id: z.string().uuid().optional(),
+  filename: z.string().min(1).max(255).regex(/^[^<>:"/\\|?*\x00-\x1F]+$/, 'Invalid filename characters'),
+  mimeType: z.enum(['image/jpeg', 'image/png', 'image/webp', 'application/pdf'], {
+    errorMap: () => ({ message: 'Only JPEG, PNG, WEBP, and PDF documents are allowed' }),
+  }),
+  fileSizeBytes: z.number().int().positive().max(5 * 1024 * 1024, 'File size cannot exceed 5MB'),
+  url: z.string().url('Invalid attachment URL'),
+  sha256Checksum: z.string().length(64, 'SHA-256 checksum must be exactly 64 hex characters'),
+  uploadedAt: z.string().datetime().optional(),
+});
+
+// Communication Schemas
+export const createConversationSchema = z.object({
+  type: z.nativeEnum(ConversationType),
+  bookingId: z.string().uuid().optional(),
+  workerId: z.string().uuid().optional(),
+  customerId: z.string().uuid().optional(),
+  cooperativeId: z.string().uuid().optional(),
+  federationId: z.string().uuid().optional(),
+  title: z.string().min(2).max(150).optional(),
+});
+
+export const sendMessageSchema = z.object({
+  content: z.string().min(1, 'Message cannot be empty').max(2000, 'Message cannot exceed 2000 characters'),
+  clientMessageId: z.string().optional(),
+  attachments: z.array(attachmentMetadataSchema).max(5, 'Maximum 5 attachments per message').optional(),
+});
+
+export const markMessageReadSchema = z.object({
+  messageId: z.string().uuid('Invalid message ID'),
+});
+
+// Notification Schemas
+export const registerPushTokenSchema = z.object({
+  token: z.string().min(1, 'Token is required'),
+  platform: z.enum(['IOS', 'ANDROID', 'WEB']),
+  deviceId: z.string().optional(),
+});
+
+export const updateNotificationPreferencesSchema = z.object({
+  channel: z.nativeEnum(NotificationChannel),
+  eventType: z.nativeEnum(NotificationEventType),
+  isEnabled: z.boolean(),
+});
+
+// Complaints Schemas
+export const createComplaintSchema = z.object({
+  bookingId: z.string().uuid('Invalid booking ID'),
+  category: z.string().min(2).max(100),
+  description: z.string().min(5, 'Description must be at least 5 characters').max(2000),
+});
+
+export const updateComplaintStatusSchema = z.object({
+  status: z.nativeEnum(ComplaintStatus),
+  resolutionNotes: z.string().max(2000).optional(),
+});
+
+// Dispute Schemas
+export const createDisputeSchema = z.object({
+  bookingId: z.string().uuid('Invalid booking ID'),
+  reason: z.string().min(5, 'Dispute reason must be at least 5 characters').max(2000),
+  disputedAmount: z.number().positive('Disputed amount must be positive'),
+  evidences: z.array(z.object({
+    title: z.string().min(2).max(100),
+    description: z.string().max(1000).optional(),
+    attachment: attachmentMetadataSchema,
+  })).optional(),
+});
+
+export const updateDisputeStatusSchema = z.object({
+  status: z.nativeEnum(DisputeStatus),
+  resolutionNotes: z.string().max(2000).optional(),
+});
+
+export const addDisputeEvidenceSchema = z.object({
+  title: z.string().min(2).max(100),
+  description: z.string().max(1000).optional(),
+  attachment: attachmentMetadataSchema,
+});
+
+export const resolveDisputeSchema = z.object({
+  resolution: z.nativeEnum(DisputeResolution),
+  resolutionNotes: z.string().min(5, 'Resolution notes are required').max(2000),
+  refundAmount: z.number().positive().optional(),
+});
+
+// Account Moderation & Restriction Schemas
+export const createAccountRestrictionSchema = z.object({
+  userId: z.string().uuid('Invalid user ID'),
+  restrictionType: z.nativeEnum(AccountRestrictionType),
+  reason: z.string().min(5, 'Reason must be at least 5 characters').max(1000),
+  expiresAt: z.string().datetime().optional(),
+});
+
+// Emergency / SOS Schemas
+export const createSosAlertSchema = z.object({
+  bookingId: z.string().uuid().optional(),
+  category: z.nativeEnum(SosCategory),
+  priority: z.nativeEnum(SosPriority).default(SosPriority.CRITICAL),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  addressText: z.string().max(500).optional(),
+  description: z.string().max(1000).optional(),
+});
+
+export const updateSosAlertSchema = z.object({
+  status: z.nativeEnum(SosStatus),
+  resolutionNotes: z.string().max(2000).optional(),
+  note: z.string().max(1000).optional(),
+});
+
+export const assignSosResponderSchema = z.object({
+  responderId: z.string().uuid('Invalid responder user ID'),
+});
+
+// Worker Support Schemas
+export const createWorkerSupportRequestSchema = z.object({
+  category: z.nativeEnum(SupportRequestCategory),
+  subject: z.string().min(3).max(150),
+  description: z.string().min(5).max(2000),
+});
+
+export const updateWorkerSupportRequestSchema = z.object({
+  status: z.nativeEnum(SupportRequestStatus),
+  actionTaken: z.string().max(2000).optional(),
+});
+
+// Offline Queue Schema
+export const offlineSyncItemSchema = z.object({
+  operationId: z.string().uuid('Invalid operation ID'),
+  operationType: z.nativeEnum(OfflineSyncOperationType),
+  idempotencyKey: z.string().min(8, 'Idempotency key must be at least 8 characters'),
+  clientTimestamp: z.string().datetime(),
+  payload: z.record(z.any()),
+});
+
+export const offlineSyncQueueSchema = z.object({
+  items: z.array(offlineSyncItemSchema).max(50, 'Max 50 operations per sync batch'),
+});
+
+// Exported Inferred Types
+export type AttachmentMetadataInput = z.infer<typeof attachmentMetadataSchema>;
+export type CreateConversationInput = z.infer<typeof createConversationSchema>;
+export type SendMessageInput = z.infer<typeof sendMessageSchema>;
+export type RegisterPushTokenInput = z.infer<typeof registerPushTokenSchema>;
+export type UpdateNotificationPreferencesInput = z.infer<typeof updateNotificationPreferencesSchema>;
+export type CreateComplaintInput = z.infer<typeof createComplaintSchema>;
+export type UpdateComplaintStatusInput = z.infer<typeof updateComplaintStatusSchema>;
+export type CreateDisputeInput = z.infer<typeof createDisputeSchema>;
+export type UpdateDisputeStatusInput = z.infer<typeof updateDisputeStatusSchema>;
+export type AddDisputeEvidenceInput = z.infer<typeof addDisputeEvidenceSchema>;
+export type ResolveDisputeInput = z.infer<typeof resolveDisputeSchema>;
+export type CreateAccountRestrictionInput = z.infer<typeof createAccountRestrictionSchema>;
+export type CreateSosAlertInput = z.infer<typeof createSosAlertSchema>;
+export type UpdateSosAlertInput = z.infer<typeof updateSosAlertSchema>;
+export type AssignSosResponderInput = z.infer<typeof assignSosResponderSchema>;
+export type CreateWorkerSupportRequestInput = z.infer<typeof createWorkerSupportRequestSchema>;
+export type UpdateWorkerSupportRequestInput = z.infer<typeof updateWorkerSupportRequestSchema>;
+export type OfflineSyncQueueInput = z.infer<typeof offlineSyncQueueSchema>;
+
 
 
 
