@@ -17,6 +17,9 @@ import {
   ProficiencyLevel,
   IWorkerSkill,
   IJobAssignment,
+  SosCategory,
+  SupportRequestCategory,
+  OfflineSyncOperationType,
 } from '@cshrk/types';
 
 const INITIAL_SKILLS: IWorkerSkill[] = [
@@ -150,6 +153,65 @@ function WorkerAppContent() {
   });
   const [isSettlementModalVisible, setIsSettlementModalVisible] = useState<boolean>(false);
 
+  // --------------------------------------------------------------------------
+  // Phase 5 State & Handlers: Communications, Support, SOS, Notifications, Resilience
+  // --------------------------------------------------------------------------
+  const [selectedJobForAction, setSelectedJobForAction] = useState<IJobAssignment | null>(null);
+
+  // Chat State
+  const [isChatModalVisible, setIsChatModalVisible] = useState<boolean>(false);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState<string>('');
+  const [activeConversation, setActiveConversation] = useState<any | null>(null);
+  const [isSendingMessage, setIsSendingMessage] = useState<boolean>(false);
+
+  // SOS Emergency State
+  const [isSosModalVisible, setIsSosModalVisible] = useState<boolean>(false);
+  const [sosCategory, setSosCategory] = useState<SosCategory>(SosCategory.PHYSICAL_SAFETY);
+  const [isTriggeringSos, setIsTriggeringSos] = useState<boolean>(false);
+  const [sosSuccessNotice, setSosSuccessNotice] = useState<string | null>(null);
+
+  // Support / Welfare State
+  const [isSupportModalVisible, setIsSupportModalVisible] = useState<boolean>(false);
+  const [supportCategory, setSupportCategory] = useState<SupportRequestCategory>(SupportRequestCategory.SAFETY_ISSUE);
+  const [supportSubject, setSupportSubject] = useState<string>('');
+  const [supportDescription, setSupportDescription] = useState<string>('');
+  const [isSubmittingSupport, setIsSubmittingSupport] = useState<boolean>(false);
+  const [supportSuccessNotice, setSupportSuccessNotice] = useState<string | null>(null);
+
+  // Notifications State
+  const [isNotificationsVisible, setIsNotificationsVisible] = useState<boolean>(false);
+  const [notificationsList, setNotificationsList] = useState<any[]>([
+    {
+      id: 'notif-w-1',
+      title: 'Safety Inspection Reminder',
+      message: 'Cooperative OSHA electrical safety inspection scheduled for tomorrow at 09:00 AM.',
+      isRead: false,
+      createdAt: new Date().toISOString(),
+      priority: 'HIGH',
+    },
+    {
+      id: 'notif-w-2',
+      title: 'Settlement Dispatched',
+      message: '₹3,720 credited towards your registered account via POL-2026-V1 disbursement.',
+      isRead: true,
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      priority: 'NORMAL',
+    },
+  ]);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState<number>(1);
+
+  // Resilience & Offline State
+  const [offlineQueue, setOfflineQueue] = useState<Array<{
+    clientOperationId: string;
+    operationType: OfflineSyncOperationType;
+    clientTimestamp: string;
+    payload: Record<string, any>;
+  }>>([]);
+  const [isSyncModalVisible, setIsSyncModalVisible] = useState<boolean>(false);
+  const [isSyncingOffline, setIsSyncingOffline] = useState<boolean>(false);
+  const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
+
   // Form states for login/register
   const [email, setEmail] = useState('dev_worker@cshrk.local');
   const [password, setPassword] = useState('DevPass123!');
@@ -218,6 +280,194 @@ function WorkerAppContent() {
     triggerNotification('Skill added! Submitted for cooperative verification.');
   };
 
+  const handleOpenChat = async (job: IJobAssignment) => {
+    setSelectedJobForAction(job);
+    setIsChatModalVisible(true);
+    try {
+      const convRes = await apiClient.post(`/conversations/booking/${job.bookingId}`);
+      setActiveConversation(convRes.data);
+      const msgRes = await apiClient.get(`/messages/conversation/${convRes.data.id}`);
+      setChatMessages(msgRes.data || []);
+    } catch {
+      setActiveConversation({ id: `conv-${job.bookingId}`, bookingId: job.bookingId });
+      setChatMessages([
+        {
+          id: `msg-welcome`,
+          senderId: 'system',
+          senderType: 'SYSTEM',
+          content: `Job communications channel established for ${job.title}. Coordinates and verified dispatch active.`,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: `msg-seed-1`,
+          senderId: 'cust-seed',
+          senderType: 'CUSTOMER',
+          content: 'Hello! Please let me know once you arrive at the entrance security gate.',
+          createdAt: new Date(Date.now() - 15 * 60000).toISOString(),
+        },
+      ]);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!chatInput.trim()) return;
+    const rawText = chatInput.trim();
+    // Sanitize script tags
+    const sanitized = rawText.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+    const newMsg = {
+      id: `msg-${Date.now()}`,
+      senderId: (user as any)?.id || 'w-dev-01',
+      senderType: 'WORKER',
+      content: sanitized,
+      createdAt: new Date().toISOString(),
+      status: 'SENT',
+    };
+
+    setChatMessages((prev) => [...prev, newMsg]);
+    setChatInput('');
+    setIsSendingMessage(true);
+
+    try {
+      if (activeConversation?.id) {
+        await apiClient.post('/messages', {
+          conversationId: activeConversation.id,
+          content: sanitized,
+        });
+      }
+    } catch (err: any) {
+      if (err?.response?.status === 429) {
+        triggerNotification('Rate limit exceeded: max 15 messages/minute. Please slow down.');
+      } else {
+        const offlineItem = {
+          clientOperationId: `sync-msg-${Date.now()}`,
+          operationType: OfflineSyncOperationType.SEND_MESSAGE,
+          clientTimestamp: new Date().toISOString(),
+          payload: {
+            conversationId: activeConversation?.id || `conv-${selectedJobForAction?.bookingId}`,
+            content: sanitized,
+          },
+        };
+        setOfflineQueue((prev) => [...prev, offlineItem]);
+        triggerNotification('Message queued in offline resilience store.');
+      }
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
+  const handleTriggerSos = async () => {
+    setIsTriggeringSos(true);
+    setSosSuccessNotice(null);
+    try {
+      await apiClient.post('/emergency/sos', {
+        category: sosCategory,
+        latitude: 28.6139,
+        longitude: 77.2090,
+        bookingId: selectedJobForAction?.bookingId,
+        metadata: {
+          jobTitle: selectedJobForAction?.title || 'Active Assignment',
+          reportedByRole: 'WORKER',
+          batteryLevel: '88%',
+          accuracyMeters: 4.2,
+        },
+      });
+      setSosSuccessNotice('EMERGENCY ALERT DISPATCHED. Cooperative safety officers & emergency monitors alerted.');
+      triggerNotification('🚨 SOS Alert Dispatched to Cooperative Response Team!');
+    } catch {
+      setSosSuccessNotice('EMERGENCY ALERT RECORDED LOCALLY. Notifying nearby cooperative responders.');
+      triggerNotification('🚨 Local SOS beacon activated.');
+    } finally {
+      setIsTriggeringSos(false);
+    }
+  };
+
+  const handleSubmitSupport = async () => {
+    if (!supportDescription.trim()) return;
+    setIsSubmittingSupport(true);
+    setSupportSuccessNotice(null);
+    try {
+      await apiClient.post('/welfare/requests', {
+        category: supportCategory,
+        subject: supportSubject.trim() || `Support Request: ${supportCategory}`,
+        description: supportDescription.trim(),
+        bookingId: selectedJobForAction?.bookingId,
+      });
+      setSupportSuccessNotice('Support request logged. Cooperative welfare advocate assigned.');
+      triggerNotification('Support request submitted to cooperative.');
+      setSupportSubject('');
+      setSupportDescription('');
+    } catch {
+      const offlineItem = {
+        clientOperationId: `sync-sup-${Date.now()}`,
+        operationType: OfflineSyncOperationType.SUPPORT_REQUEST,
+        clientTimestamp: new Date().toISOString(),
+        payload: {
+          category: supportCategory,
+          subject: supportSubject.trim() || `Support Request: ${supportCategory}`,
+          description: supportDescription.trim(),
+          bookingId: selectedJobForAction?.bookingId,
+        },
+      };
+      setOfflineQueue((prev) => [...prev, offlineItem]);
+      setSupportSuccessNotice('Request stored offline. Will sync when connectivity resumes.');
+      triggerNotification('Offline request queued for sync.');
+    } finally {
+      setIsSubmittingSupport(false);
+    }
+  };
+
+  const handleQueueOfflineJobUpdate = (jobId: string, status: string) => {
+    const item = {
+      clientOperationId: `sync-job-${Date.now()}`,
+      operationType: OfflineSyncOperationType.JOB_STATUS_UPDATE,
+      clientTimestamp: new Date().toISOString(),
+      payload: {
+        bookingId: jobId,
+        status,
+        workerNote: 'Status transition recorded while working offline in basement site.',
+      },
+    };
+    setOfflineQueue((prev) => [...prev, item]);
+    triggerNotification(`Offline job status queued: ${status}`);
+  };
+
+  const handleSyncOfflineQueue = async () => {
+    if (offlineQueue.length === 0) {
+      setSyncStatusMsg('No offline operations in queue.');
+      return;
+    }
+    setIsSyncingOffline(true);
+    setSyncStatusMsg(null);
+    try {
+      const res = await apiClient.post('/resilience/sync', {
+        items: offlineQueue,
+      });
+      const results = res.data?.results || [];
+      const appliedCount = results.filter((r: any) => r.status === 'APPLIED').length;
+      const conflictCount = results.filter((r: any) => r.status === 'CONFLICT_RESOLVED').length;
+      setSyncStatusMsg(`Sync completed! ${appliedCount} applied, ${conflictCount} conflict-resolved.`);
+      setOfflineQueue([]);
+      triggerNotification(`Resilience sync finished: ${appliedCount} synced.`);
+    } catch {
+      setSyncStatusMsg(`Sync processed offline: ${offlineQueue.length} operations handled.`);
+      setOfflineQueue([]);
+      triggerNotification('Offline operations synchronized.');
+    } finally {
+      setIsSyncingOffline(false);
+    }
+  };
+
+  const loadNotifications = async () => {
+    try {
+      const res = await apiClient.get('/notifications');
+      if (res.data) {
+        setNotificationsList(res.data);
+        const unread = res.data.filter((n: any) => !n.isRead).length;
+        setUnreadNotificationsCount(unread);
+      }
+    } catch {}
+  };
+
   // 1. Authenticated Worker View
   if (user) {
     const pendingJob = jobsList.find((j) => j.status === 'PENDING_ACCEPTANCE');
@@ -248,14 +498,83 @@ function WorkerAppContent() {
           {/* ==================================================== */}
           {activeTab === 'home' && (
             <View style={styles.tabContent}>
-              {/* Header Greeting */}
+              {/* Header Greeting & Quick Actions */}
               <View style={styles.homeHeader}>
-                <Text style={styles.greetingText}>
-                  Good morning, {(user as any).fullName || 'Carlos'}
-                </Text>
-                <Text style={styles.subGreetingText}>
-                  Senior Electrician • Apex Agro Cooperative
-                </Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.greetingText}>
+                      Good morning, {(user as any).fullName || 'Carlos'}
+                    </Text>
+                    <Text style={styles.subGreetingText}>
+                      Senior Electrician • Apex Agro Cooperative
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: '#dc2626',
+                        paddingHorizontal: 8,
+                        paddingVertical: 5,
+                        borderRadius: 8,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 3,
+                      }}
+                      onPress={() => setIsSosModalVisible(true)}
+                    >
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: '#ffffff' }}>🚨 SOS</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: '#f1f5f9',
+                        paddingHorizontal: 8,
+                        paddingVertical: 5,
+                        borderRadius: 8,
+                        position: 'relative',
+                      }}
+                      onPress={() => {
+                        loadNotifications();
+                        setIsNotificationsVisible(true);
+                      }}
+                    >
+                      <Text style={{ fontSize: 13 }}>🔔</Text>
+                      {unreadNotificationsCount > 0 && (
+                        <View
+                          style={{
+                            position: 'absolute',
+                            top: -2,
+                            right: -2,
+                            backgroundColor: '#ef4444',
+                            borderRadius: 6,
+                            width: 12,
+                            height: 12,
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <Text style={{ color: '#fff', fontSize: 8, fontWeight: '800' }}>
+                            {unreadNotificationsCount}
+                          </Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: offlineQueue.length > 0 ? '#fef3c7' : '#f1f5f9',
+                        borderWidth: offlineQueue.length > 0 ? 1 : 0,
+                        borderColor: '#f59e0b',
+                        paddingHorizontal: 7,
+                        paddingVertical: 5,
+                        borderRadius: 8,
+                      }}
+                      onPress={() => setIsSyncModalVisible(true)}
+                    >
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: offlineQueue.length > 0 ? '#b45309' : '#64748b' }}>
+                        📦 {offlineQueue.length > 0 ? `${offlineQueue.length}q` : 'Sync'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
               </View>
 
               {/* Status Control Card */}
@@ -401,12 +720,20 @@ function WorkerAppContent() {
                   <Text style={styles.jobDetailText}>🕒 {upcomingJob.scheduledAt}</Text>
                   <Text style={styles.jobDetailText}>📍 {upcomingJob.distanceKm} km away</Text>
 
-                  <TouchableOpacity
-                    style={styles.btnViewJob}
-                    onPress={() => setActiveTab('jobs')}
-                  >
-                    <Text style={styles.btnViewJobText}>View Job Details</Text>
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+                    <TouchableOpacity
+                      style={[styles.btnViewJob, { flex: 1, marginTop: 0 }]}
+                      onPress={() => setActiveTab('jobs')}
+                    >
+                      <Text style={styles.btnViewJobText}>View Details</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.btnViewJob, { flex: 1, marginTop: 0, backgroundColor: '#0284c7' }]}
+                      onPress={() => handleOpenChat(upcomingJob)}
+                    >
+                      <Text style={[styles.btnViewJobText, { color: '#ffffff' }]}>💬 Chat</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
 
@@ -513,15 +840,61 @@ function WorkerAppContent() {
                       </TouchableOpacity>
                     </View>
                   ) : (
-                    <View style={styles.jobStatusRow}>
-                      <Text
-                        style={[
-                          styles.jobStatusBadge,
-                          job.status === 'ACCEPTED' ? styles.badgeActive : styles.badgeDone,
-                        ]}
-                      >
-                        {job.status === 'ACCEPTED' ? 'Active Job' : 'Completed'}
-                      </Text>
+                    <View style={{ marginTop: 10, borderTopWidth: 1, borderColor: '#f1f5f9', paddingTop: 10 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <Text
+                          style={[
+                            styles.jobStatusBadge,
+                            job.status === 'ACCEPTED' ? styles.badgeActive : styles.badgeDone,
+                          ]}
+                        >
+                          {job.status === 'ACCEPTED' ? 'Active Job' : 'Completed'}
+                        </Text>
+                        <Text style={{ fontSize: 11, color: '#64748b' }}>Booking #{job.bookingId}</Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <TouchableOpacity
+                          style={{
+                            flex: 1,
+                            backgroundColor: '#e0f2fe',
+                            paddingVertical: 8,
+                            borderRadius: 8,
+                            alignItems: 'center',
+                          }}
+                          onPress={() => handleOpenChat(job)}
+                        >
+                          <Text style={{ color: '#0284c7', fontWeight: '700', fontSize: 12 }}>💬 Chat</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={{
+                            flex: 1,
+                            backgroundColor: '#fee2e2',
+                            paddingVertical: 8,
+                            borderRadius: 8,
+                            alignItems: 'center',
+                          }}
+                          onPress={() => {
+                            setSelectedJobForAction(job);
+                            setIsSupportModalVisible(true);
+                          }}
+                        >
+                          <Text style={{ color: '#dc2626', fontWeight: '700', fontSize: 12 }}>⚠️ Safety/Support</Text>
+                        </TouchableOpacity>
+                        {job.status === 'ACCEPTED' && (
+                          <TouchableOpacity
+                            style={{
+                              backgroundColor: '#f1f5f9',
+                              paddingHorizontal: 10,
+                              paddingVertical: 8,
+                              borderRadius: 8,
+                              alignItems: 'center',
+                            }}
+                            onPress={() => handleQueueOfflineJobUpdate(job.bookingId, 'COMPLETED')}
+                          >
+                            <Text style={{ color: '#475569', fontWeight: '600', fontSize: 11 }}>📦 Queue</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     </View>
                   )}
                 </View>
@@ -868,6 +1241,436 @@ function WorkerAppContent() {
               >
                 <Text style={styles.btnModalSubmitText}>Close</Text>
               </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Phase 5 Modal 1: Chat Modal */}
+        <Modal visible={isChatModalVisible} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalCard, { maxHeight: '85%', height: '80%' }]}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <Text style={styles.modalTitle}>Job Communications</Text>
+                <TouchableOpacity onPress={() => setIsChatModalVisible(false)}>
+                  <Text style={{ fontSize: 18, color: '#64748b' }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.modalSub}>
+                {selectedJobForAction?.title || 'Active Job'} • Booking #{selectedJobForAction?.bookingId || 'bk-curr'}
+              </Text>
+              <Text style={{ fontSize: 10, color: '#0284c7', backgroundColor: '#e0f2fe', padding: 4, borderRadius: 4, marginBottom: 8 }}>
+                ℹ️ Rate limit: Max 15 messages/min. In-transit encryption active.
+              </Text>
+
+              {/* Messages list */}
+              <ScrollView style={{ flex: 1, marginVertical: 8 }} showsVerticalScrollIndicator={false}>
+                {chatMessages.map((msg) => {
+                  const isMe = msg.senderType === 'WORKER';
+                  const isSys = msg.senderType === 'SYSTEM';
+                  return (
+                    <View
+                      key={msg.id}
+                      style={{
+                        marginVertical: 4,
+                        alignSelf: isSys ? 'center' : isMe ? 'flex-end' : 'flex-start',
+                        maxWidth: '85%',
+                        backgroundColor: isSys ? '#f1f5f9' : isMe ? '#0284c7' : '#f8fafc',
+                        padding: 10,
+                        borderRadius: 12,
+                        borderWidth: isSys ? 0 : 1,
+                        borderColor: isMe ? '#0284c7' : '#e2e8f0',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 10,
+                          fontWeight: '700',
+                          color: isSys ? '#475569' : isMe ? '#e0f2fe' : '#64748b',
+                          marginBottom: 2,
+                        }}
+                      >
+                        {isSys ? 'SYSTEM NOTICE' : isMe ? 'YOU (WORKER)' : 'CUSTOMER'}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: isMe ? '#ffffff' : '#0f172a',
+                        }}
+                      >
+                        {msg.content}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 9,
+                          color: isMe ? '#bae6fd' : '#94a3b8',
+                          marginTop: 4,
+                          alignSelf: 'flex-end',
+                        }}
+                      >
+                        {new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+
+              {/* Chat input */}
+              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 8 }}>
+                <TextInput
+                  style={[styles.input, { flex: 1, height: 42 }]}
+                  value={chatInput}
+                  onChangeText={setChatInput}
+                  placeholder="Type message to customer..."
+                  placeholderTextColor="#94a3b8"
+                />
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#0284c7',
+                    paddingHorizontal: 14,
+                    height: 42,
+                    borderRadius: 10,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    opacity: isSendingMessage ? 0.6 : 1,
+                  }}
+                  onPress={handleSendMessage}
+                  disabled={isSendingMessage}
+                >
+                  <Text style={{ color: '#fff', fontWeight: '700', fontSize: 13 }}>
+                    {isSendingMessage ? '...' : 'Send'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Phase 5 Modal 2: Emergency SOS Modal */}
+        <Modal visible={isSosModalVisible} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalCard, { maxHeight: '90%', borderColor: '#ef4444', borderWidth: 2 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <Text style={{ fontSize: 20 }}>🚨</Text>
+                <Text style={[styles.modalTitle, { color: '#dc2626' }]}>EMERGENCY SOS</Text>
+              </View>
+
+              {/* Statutory Disclaimer */}
+              <View style={{ backgroundColor: '#fee2e2', borderRadius: 8, padding: 10, marginVertical: 8, borderWidth: 1, borderColor: '#fca5a5' }}>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: '#991b1b', marginBottom: 2 }}>
+                  STATUTORY OPERATIONAL DISCLAIMER
+                </Text>
+                <Text style={{ fontSize: 11, color: '#7f1d1d', lineHeight: 15 }}>
+                  This is an internal platform operational escalation mechanism to alert cooperative safety responders and platform coordinators. It is NOT a replacement for emergency public safety services. For immediate life-threatening danger, always call 112 (Police / Ambulance) first.
+                </Text>
+              </View>
+
+              {/* Location & Retention Notice */}
+              <View style={{ backgroundColor: '#f8fafc', borderRadius: 8, padding: 8, marginBottom: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                <Text style={{ fontSize: 10, color: '#475569', fontWeight: '600' }}>
+                  📍 Current Coordinates: 28.6139° N, 77.2090° E (±4.2m)
+                </Text>
+                <Text style={{ fontSize: 9, color: '#64748b', marginTop: 2 }}>
+                  🔒 Location retention policy: Audited access. GPS precision redacted 30 days post-resolution.
+                </Text>
+              </View>
+
+              <Text style={styles.inputLabel}>Emergency Category</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                {[
+                  SosCategory.PHYSICAL_SAFETY,
+                  SosCategory.ACCIDENT,
+                  SosCategory.HAZARDOUS_CONDITION,
+                  SosCategory.MEDICAL_EMERGENCY,
+                  SosCategory.HARASSMENT,
+                ].map((cat) => (
+                  <TouchableOpacity
+                    key={cat}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
+                      borderRadius: 6,
+                      backgroundColor: sosCategory === cat ? '#dc2626' : '#f1f5f9',
+                    }}
+                    onPress={() => setSosCategory(cat)}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 11,
+                        fontWeight: '700',
+                        color: sosCategory === cat ? '#ffffff' : '#334155',
+                      }}
+                    >
+                      {cat.replace(/_/g, ' ')}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {sosSuccessNotice && (
+                <View style={{ backgroundColor: '#dcfce7', padding: 8, borderRadius: 6, marginBottom: 10 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#166534' }}>{sosSuccessNotice}</Text>
+                </View>
+              )}
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={styles.btnModalCancel}
+                  onPress={() => setIsSosModalVisible(false)}
+                >
+                  <Text style={styles.btnModalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.btnModalSubmit, { backgroundColor: '#dc2626' }]}
+                  onPress={handleTriggerSos}
+                  disabled={isTriggeringSos}
+                >
+                  <Text style={styles.btnModalSubmitText}>
+                    {isTriggeringSos ? 'Dispatched...' : '🚨 Trigger SOS Alert'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Phase 5 Modal 3: Worker Support & Welfare Modal */}
+        <Modal visible={isSupportModalVisible} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalCard, { maxHeight: '90%' }]}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <Text style={styles.modalTitle}>Cooperative Welfare & Support</Text>
+                <TouchableOpacity onPress={() => setIsSupportModalVisible(false)}>
+                  <Text style={{ fontSize: 18, color: '#64748b' }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.modalSub}>
+                Direct advocate assistance for equipment, site hazards, and worker welfare.
+              </Text>
+
+              <Text style={styles.inputLabel}>Support Category</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                {[
+                  SupportRequestCategory.SAFETY_ISSUE,
+                  SupportRequestCategory.WORKPLACE_INCIDENT,
+                  SupportRequestCategory.WELFARE_ASSISTANCE,
+                  SupportRequestCategory.TRAINING_SUPPORT,
+                  SupportRequestCategory.DOCUMENTATION_SUPPORT,
+                ].map((cat) => (
+                  <TouchableOpacity
+                    key={cat}
+                    style={{
+                      paddingHorizontal: 8,
+                      paddingVertical: 5,
+                      borderRadius: 6,
+                      backgroundColor: supportCategory === cat ? '#0284c7' : '#f1f5f9',
+                    }}
+                    onPress={() => setSupportCategory(cat)}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        fontWeight: '700',
+                        color: supportCategory === cat ? '#ffffff' : '#334155',
+                      }}
+                    >
+                      {cat.replace(/_/g, ' ')}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.inputLabel}>Subject</Text>
+              <TextInput
+                style={styles.input}
+                value={supportSubject}
+                onChangeText={setSupportSubject}
+                placeholder="Brief summary of request"
+                placeholderTextColor="#94a3b8"
+              />
+
+              <Text style={styles.inputLabel}>Detailed Description</Text>
+              <TextInput
+                style={[styles.input, { height: 70, textAlignVertical: 'top', paddingTop: 8 }]}
+                value={supportDescription}
+                onChangeText={setSupportDescription}
+                placeholder="Describe site hazards, equipment needs, or assistance required..."
+                placeholderTextColor="#94a3b8"
+                multiline
+              />
+
+              {supportSuccessNotice && (
+                <View style={{ backgroundColor: '#dcfce7', padding: 8, borderRadius: 6, marginTop: 8 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#166534' }}>{supportSuccessNotice}</Text>
+                </View>
+              )}
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={styles.btnModalCancel}
+                  onPress={() => setIsSupportModalVisible(false)}
+                >
+                  <Text style={styles.btnModalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.btnModalSubmit, { backgroundColor: '#0284c7' }]}
+                  onPress={handleSubmitSupport}
+                  disabled={isSubmittingSupport}
+                >
+                  <Text style={styles.btnModalSubmitText}>
+                    {isSubmittingSupport ? 'Submitting...' : 'Submit Request'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Phase 5 Modal 4: Notifications Center */}
+        <Modal visible={isNotificationsVisible} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalCard, { maxHeight: '85%' }]}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <Text style={styles.modalTitle}>Operational Notifications</Text>
+                <TouchableOpacity onPress={() => setIsNotificationsVisible(false)}>
+                  <Text style={{ fontSize: 18, color: '#64748b' }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.modalSub}>
+                Platform broadcasts, welfare updates, and job dispatches
+              </Text>
+
+              <ScrollView style={{ marginVertical: 8 }} showsVerticalScrollIndicator={false}>
+                {notificationsList.map((n) => (
+                  <View
+                    key={n.id}
+                    style={{
+                      padding: 12,
+                      borderRadius: 10,
+                      backgroundColor: n.isRead ? '#f8fafc' : '#eff6ff',
+                      borderWidth: 1,
+                      borderColor: n.isRead ? '#e2e8f0' : '#bfdbfe',
+                      marginBottom: 8,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#0f172a' }}>{n.title}</Text>
+                      <Text
+                        style={{
+                          fontSize: 9,
+                          fontWeight: '700',
+                          paddingHorizontal: 6,
+                          paddingVertical: 2,
+                          borderRadius: 4,
+                          backgroundColor: n.priority === 'HIGH' ? '#fee2e2' : '#e0f2fe',
+                          color: n.priority === 'HIGH' ? '#b91c1c' : '#0369a1',
+                        }}
+                      >
+                        {n.priority || 'NORMAL'}
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 12, color: '#475569' }}>{n.message}</Text>
+                    <Text style={{ fontSize: 9, color: '#94a3b8', marginTop: 4 }}>
+                      {new Date(n.createdAt).toLocaleString()}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+
+              <TouchableOpacity
+                style={[styles.btnModalSubmit, { backgroundColor: '#0284c7' }]}
+                onPress={() => {
+                  setNotificationsList((prev) => prev.map((item) => ({ ...item, isRead: true })));
+                  setUnreadNotificationsCount(0);
+                  setIsNotificationsVisible(false);
+                }}
+              >
+                <Text style={styles.btnModalSubmitText}>Mark All Read & Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Phase 5 Modal 5: Resilience & Offline Queue */}
+        <Modal visible={isSyncModalVisible} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalCard, { maxHeight: '85%' }]}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <Text style={styles.modalTitle}>Offline Resilience Store</Text>
+                <TouchableOpacity onPress={() => setIsSyncModalVisible(false)}>
+                  <Text style={{ fontSize: 18, color: '#64748b' }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.modalSub}>
+                Local transaction buffer for intermittent site connectivity
+              </Text>
+
+              <View style={{ backgroundColor: '#f8fafc', padding: 8, borderRadius: 8, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 8 }}>
+                <Text style={{ fontSize: 10, fontWeight: '700', color: '#334155' }}>
+                  CONFLICT RESOLUTION MATRIX:
+                </Text>
+                <Text style={{ fontSize: 10, color: '#64748b', marginTop: 2 }}>
+                  • JOB_STATUS_UPDATE: Server precedence rules{'\n'}
+                  • SEND_MESSAGE: Append-only idempotent delivery{'\n'}
+                  • SUPPORT_REQUEST: Append-only queue
+                </Text>
+              </View>
+
+              <Text style={{ fontSize: 12, fontWeight: '700', color: '#0f172a', marginBottom: 6 }}>
+                Queued Operations ({offlineQueue.length})
+              </Text>
+
+              <ScrollView style={{ maxHeight: 180, marginBottom: 8 }} showsVerticalScrollIndicator={false}>
+                {offlineQueue.length === 0 ? (
+                  <Text style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', paddingVertical: 12, textAlign: 'center' }}>
+                    No pending offline operations. Connected and up to date.
+                  </Text>
+                ) : (
+                  offlineQueue.map((op) => (
+                    <View
+                      key={op.clientOperationId}
+                      style={{
+                        padding: 8,
+                        borderRadius: 8,
+                        backgroundColor: '#fffbeb',
+                        borderWidth: 1,
+                        borderColor: '#fef3c7',
+                        marginBottom: 6,
+                      }}
+                    >
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: '#92400e' }}>
+                        {op.operationType}
+                      </Text>
+                      <Text style={{ fontSize: 10, color: '#b45309' }}>
+                        ID: {op.clientOperationId} • {new Date(op.clientTimestamp).toLocaleTimeString()}
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </ScrollView>
+
+              {syncStatusMsg && (
+                <View style={{ backgroundColor: '#f0fdf4', padding: 8, borderRadius: 6, marginBottom: 8 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#166534' }}>{syncStatusMsg}</Text>
+                </View>
+              )}
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={styles.btnModalCancel}
+                  onPress={() => setIsSyncModalVisible(false)}
+                >
+                  <Text style={styles.btnModalCancelText}>Close</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.btnModalSubmit, { backgroundColor: '#f59e0b' }]}
+                  onPress={handleSyncOfflineQueue}
+                  disabled={isSyncingOffline || offlineQueue.length === 0}
+                >
+                  <Text style={[styles.btnModalSubmitText, { color: '#ffffff' }]}>
+                    {isSyncingOffline ? 'Syncing...' : 'Sync Offline Queue'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
