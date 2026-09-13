@@ -38,10 +38,58 @@ export const Sidebar: React.FC = () => {
       matchViews: ['cooperatives', 'coop-details', 'coop-members', 'add-coop', 'edit-coop'],
     },
     {
+      id: 'capacity' as ViewType,
+      label: 'Capacity & Utilization',
+      icon: 'pie_chart',
+      matchViews: ['capacity'],
+    },
+    {
+      id: 'teams' as ViewType,
+      label: 'Teams & Crews',
+      icon: 'diversity_3',
+      matchViews: ['teams'],
+    },
+    {
+      id: 'jobs-projects' as ViewType,
+      label: 'Jobs & Projects',
+      icon: 'corporate_fare',
+      matchViews: ['jobs-projects'],
+    },
+    {
+      id: 'contracts' as ViewType,
+      label: 'Contracts',
+      icon: 'handshake',
+      matchViews: ['contracts'],
+    },
+    {
+      id: 'federation' as ViewType,
+      label: 'Federation Network',
+      icon: 'hub',
+      matchViews: ['federation'],
+    },
+    {
       id: 'marketplace' as ViewType,
       label: 'Marketplace',
       icon: 'storefront',
       matchViews: ['marketplace'],
+    },
+    {
+      id: 'finance' as ViewType,
+      label: 'Finance & Payments',
+      icon: 'payments',
+      matchViews: ['finance'],
+    },
+    {
+      id: 'ai-intelligence' as ViewType,
+      label: 'AI Intelligence',
+      icon: 'auto_awesome',
+      matchViews: ['ai-intelligence'],
+    },
+    {
+      id: 'audit-log' as ViewType,
+      label: 'Audit & Governance',
+      icon: 'verified_user',
+      matchViews: ['audit-log'],
     },
     {
       id: 'reports' as ViewType,
@@ -50,6 +98,7 @@ export const Sidebar: React.FC = () => {
       matchViews: ['reports'],
     },
   ];
+
 
   return (
     <aside

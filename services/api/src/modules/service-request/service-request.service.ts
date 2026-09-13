@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Optional,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,6 +11,7 @@ import { ServiceRequestEntity } from '../../database/entities/service-request.en
 import { ServiceEntity } from '../../database/entities/service.entity';
 import { WorkerEntity } from '../../database/entities/worker.entity';
 import { CustomerService } from '../customer/customer.service';
+import { AIClientService } from '../ai-client/ai-client.service';
 import {
   CreateServiceRequestDto,
   QueryCandidatesDto,
@@ -31,7 +33,10 @@ export class ServiceRequestService {
     @InjectRepository(WorkerEntity)
     private readonly workerRepository: Repository<WorkerEntity>,
     private readonly customerService: CustomerService,
+    @Optional()
+    private readonly aiClientService?: AIClientService,
   ) {}
+
 
   async createRequest(
     userId: string,
@@ -164,7 +169,7 @@ export class ServiceRequestService {
 
     const { entities, raw } = await qb.getRawAndEntities();
 
-    return entities.map((worker, index) => {
+    const eligibleCandidates: IBookingCandidate[] = entities.map((worker, index) => {
       const rawData = raw[index];
       const dist = rawData?.distanceKm !== undefined ? parseFloat(rawData.distanceKm) : 0;
       return {
@@ -180,5 +185,19 @@ export class ServiceRequestService {
         proficiencyLevel: rawData?.proficiencyLevel || ('ADVANCED' as any),
       };
     });
+
+    if (this.aiClientService && eligibleCandidates.length > 0) {
+      return this.aiClientService.matchWorkers(
+        requestId,
+        service.skillId ? [service.skillId] : [],
+        lat,
+        lng,
+        radiusKm,
+        eligibleCandidates,
+      );
+    }
+
+    return eligibleCandidates;
   }
 }
+

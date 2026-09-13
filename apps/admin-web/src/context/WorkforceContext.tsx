@@ -38,12 +38,22 @@ export type ViewType =
   | 'edit-coop'
   | 'reports'
   | 'marketplace'
+  | 'capacity'
+  | 'teams'
+  | 'jobs-projects'
+  | 'contracts'
+  | 'federation'
+  | 'audit-log'
+  | 'finance'
+  | 'ai-intelligence'
   | 'global-search'
   | 'empty-states'
   | 'loading-states'
   | 'error-states'
   | 'confirmation-dialogs'
   | 'success-notifications';
+
+
 
 export interface ToastItem {
   id: string;

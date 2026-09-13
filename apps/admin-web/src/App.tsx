@@ -36,7 +36,17 @@ import { ReportsView } from './views/ReportsView';
 import { MarketplaceMonitoringView } from './views/MarketplaceMonitoringView';
 import { GlobalSearchView } from './views/GlobalSearchView';
 
+import { CooperativeCapacityView } from './views/CooperativeCapacityView';
+import { TeamManagementView } from './views/TeamManagementView';
+import { LargeJobsProjectsView } from './views/LargeJobsProjectsView';
+import { ContractsView } from './views/ContractsView';
+import { FederationDashboardView } from './views/FederationDashboardView';
+import { AuditLogView } from './views/AuditLogView';
+import { FinanceManagementView } from './views/FinanceManagementView';
+import { AILabourIntelligenceView } from './views/AILabourIntelligenceView';
+
 import { EmptyStatesView } from './views/EmptyStatesView';
+
 import { LoadingStatesView } from './views/LoadingStatesView';
 import { ErrorStatesView } from './views/ErrorStatesView';
 import { ConfirmationDialogsView } from './views/ConfirmationDialogsView';
@@ -108,7 +118,26 @@ const MainAppContent: React.FC = () => {
       case 'global-search':
         return <GlobalSearchView />;
 
+      // Phase 3 — Cooperative & Federation Operations
+      case 'capacity':
+        return <CooperativeCapacityView />;
+      case 'teams':
+        return <TeamManagementView />;
+      case 'jobs-projects':
+        return <LargeJobsProjectsView />;
+      case 'contracts':
+        return <ContractsView />;
+      case 'federation':
+        return <FederationDashboardView />;
+      case 'audit-log':
+        return <AuditLogView />;
+      case 'finance':
+        return <FinanceManagementView />;
+      case 'ai-intelligence':
+        return <AILabourIntelligenceView />;
+
       // 17-21: State Views & Interactive Dialogs
+
       case 'empty-states':
         return <EmptyStatesView />;
       case 'loading-states':

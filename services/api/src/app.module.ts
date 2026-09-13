@@ -13,8 +13,16 @@ import { CustomerModule } from './modules/customer/customer.module';
 import { ServiceCatalogModule } from './modules/service-catalog/service-catalog.module';
 import { ServiceRequestModule } from './modules/service-request/service-request.module';
 import { BookingModule } from './modules/booking/booking.module';
+import { AuditModule } from './modules/audit/audit.module';
+import { FederationModule } from './modules/federation/federation.module';
+import { TeamModule } from './modules/team/team.module';
+import { OrgOperationsModule } from './modules/org-operations/org-operations.module';
+import { PaymentModule } from './modules/payment/payment.module';
+import { AIClientModule } from './modules/ai-client/ai-client.module';
 
 @Module({
+
+
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
@@ -31,6 +39,15 @@ import { BookingModule } from './modules/booking/booking.module';
     ServiceCatalogModule,
     ServiceRequestModule,
     BookingModule,
+    AuditModule,
+    FederationModule,
+    TeamModule,
+    OrgOperationsModule,
+    PaymentModule,
+    AIClientModule,
   ],
 })
 export class AppModule {}
+
+
+

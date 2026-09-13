@@ -20,8 +20,29 @@ export class SettlementEntity extends CshrkBaseEntity {
   @JoinColumn({ name: 'worker_id' })
   worker: WorkerEntity;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  amount: number;
+  @Column({ name: 'booking_id', type: 'uuid', nullable: true })
+  bookingId?: string;
+
+  @Column({ name: 'payment_id', type: 'uuid', nullable: true })
+  paymentId?: string;
+
+  @Column({ name: 'financial_policy_id', type: 'uuid', nullable: true })
+  financialPolicyId?: string;
+
+  @Column({ name: 'policy_version_applied', type: 'varchar', length: 50, nullable: true })
+  policyVersionApplied?: string;
+
+  @Column({ name: 'gross_amount', type: 'decimal', precision: 10, scale: 2 })
+  grossAmount: number;
+
+  @Column({ name: 'worker_amount', type: 'decimal', precision: 10, scale: 2 })
+  workerAmount: number;
+
+  @Column({ name: 'cooperative_fee', type: 'decimal', precision: 10, scale: 2 })
+  cooperativeFee: number;
+
+  @Column({ name: 'platform_fee', type: 'decimal', precision: 10, scale: 2 })
+  platformFee: number;
 
   @Column({
     type: 'enum',
@@ -35,4 +56,10 @@ export class SettlementEntity extends CshrkBaseEntity {
 
   @Column({ name: 'period_end', type: 'timestamptz', nullable: true })
   periodEnd?: Date;
+
+  @Column({ name: 'paid_out_at', type: 'timestamptz', nullable: true })
+  paidOutAt?: Date;
+
+  @Column({ name: 'payout_reference', type: 'varchar', length: 255, nullable: true })
+  payoutReference?: string;
 }

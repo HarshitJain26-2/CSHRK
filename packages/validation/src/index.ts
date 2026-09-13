@@ -113,6 +113,168 @@ export const rateBookingSchema = z.object({
   comment: z.string().max(1000).optional(),
 });
 
+// ==============================================================================
+// PHASE 3 — COOPERATIVE & FEDERATION VALIDATION SCHEMAS
+// ==============================================================================
+export const createTeamSchema = z.object({
+  cooperativeId: z.string().uuid('Invalid cooperative ID'),
+  name: z.string().min(2, 'Team name must be at least 2 characters'),
+  description: z.string().optional(),
+  leaderWorkerId: z.string().uuid('Invalid leader worker ID').optional(),
+  projectId: z.string().uuid('Invalid project ID').optional(),
+});
+
+export const updateTeamSchema = z.object({
+  name: z.string().min(2).optional(),
+  description: z.string().optional(),
+  leaderWorkerId: z.string().uuid().optional(),
+  status: z.enum(['ACTIVE', 'ASSIGNED', 'DISBANDED']).optional(),
+  projectId: z.string().uuid().optional(),
+});
+
+export const addTeamMemberSchema = z.object({
+  workerId: z.string().uuid('Invalid worker ID'),
+  role: z.enum(['LEADER', 'MEMBER']).default('MEMBER'),
+});
+
+export const createContractSchema = z.object({
+  contractNumber: z.string().min(3, 'Contract number must be at least 3 characters'),
+  title: z.string().min(3, 'Title must be at least 3 characters'),
+  clientName: z.string().min(2, 'Client name must be at least 2 characters'),
+  clientContact: z.string().optional(),
+  cooperativeId: z.string().uuid().optional(),
+  federationId: z.string().uuid().optional(),
+  scope: z.string().min(5, 'Scope must be at least 5 characters'),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
+  status: z.enum(['DRAFT', 'PROPOSED', 'ACTIVE', 'PAUSED', 'COMPLETED', 'CANCELLED']).default('DRAFT'),
+});
+
+export const updateContractStatusSchema = z.object({
+  status: z.enum(['DRAFT', 'PROPOSED', 'ACTIVE', 'PAUSED', 'COMPLETED', 'CANCELLED']),
+});
+
+export const createProjectSchema = z.object({
+  contractId: z.string().uuid().optional(),
+  cooperativeId: z.string().uuid('Invalid cooperative ID'),
+  title: z.string().min(3, 'Title must be at least 3 characters'),
+  description: z.string().min(5, 'Description must be at least 5 characters'),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  address: z.string().optional(),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
+  status: z.enum(['PLANNING', 'IN_PROGRESS', 'ON_HOLD', 'COMPLETED', 'CANCELLED']).default('PLANNING'),
+});
+
+export const createLargeJobSchema = z.object({
+  projectId: z.string().uuid().optional(),
+  cooperativeId: z.string().uuid('Invalid cooperative ID'),
+  title: z.string().min(3, 'Job title must be at least 3 characters'),
+  organizationName: z.string().min(2, 'Organization name must be at least 2 characters'),
+  skillId: z.string().uuid('Invalid skill ID'),
+  requiredWorkers: z.number().int().positive('Must require at least 1 worker'),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  address: z.string().optional(),
+  status: z.enum(['OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']).default('OPEN'),
+});
+
+export const createWorkforceRequirementSchema = z.object({
+  contractId: z.string().uuid().optional(),
+  projectId: z.string().uuid().optional(),
+  skillId: z.string().uuid('Invalid skill ID'),
+  quantity: z.number().int().positive('Quantity must be greater than 0'),
+  locationCity: z.string().min(2, 'City must be at least 2 characters'),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
+});
+
+export const createFulfillmentProposalSchema = z.object({
+  requirementId: z.string().uuid('Invalid requirement ID'),
+  title: z.string().min(3, 'Proposal title must be at least 3 characters'),
+  notes: z.string().optional(),
+  allocations: z.array(
+    z.object({
+      cooperativeId: z.string().uuid('Invalid cooperative ID'),
+      allocatedWorkers: z.number().int().positive('Must allocate at least 1 worker'),
+    }),
+  ).min(1, 'Must specify at least one cooperative allocation'),
+});
+
+export const respondFulfillmentAllocationSchema = z.object({
+  action: z.enum(['APPROVE', 'REJECT']),
+  rejectionReason: z.string().optional(),
+});
+
+export const updateMembershipStatusSchema = z.object({
+  status: z.enum(['PENDING', 'ACTIVE', 'SUSPENDED', 'INACTIVE']),
+  notes: z.string().optional(),
+});
+
+// ==============================================================================
+// PHASE 4 — FINANCIAL & PAYMENT VALIDATION SCHEMAS
+// ==============================================================================
+export const initiatePaymentSchema = z.object({
+  bookingId: z.string().uuid('Invalid booking ID format'),
+  idempotencyKey: z.string().min(8, 'Idempotency key must be at least 8 characters'),
+  paymentMethod: z.string().optional().default('UPI'),
+});
+
+export const verifyPaymentSchema = z.object({
+  paymentId: z.string().uuid('Invalid payment ID format'),
+  intentId: z.string().min(1, 'Intent ID is required'),
+  providerRef: z.string().min(1, 'Provider reference is required'),
+  signature: z.string().min(1, 'Signature is required'),
+});
+
+export const createRefundSchema = z.object({
+  paymentId: z.string().uuid('Invalid payment ID format'),
+  amount: z.number().positive('Refund amount must be positive'),
+  reason: z.string().min(3, 'Reason must be at least 3 characters'),
+});
+
+export const createFinancialPolicySchema = z.object({
+  version: z.string().min(3, 'Policy version must be at least 3 characters'),
+  effectiveFrom: z.string().datetime(),
+  effectiveTo: z.string().datetime().optional(),
+  workerSharePct: z.number().min(0).max(1),
+  cooperativeSharePct: z.number().min(0).max(1),
+  platformFeePct: z.number().min(0).max(1),
+  notes: z.string().optional(),
+}).refine(
+  (data) => Math.abs((data.workerSharePct + data.cooperativeSharePct + data.platformFeePct) - 1.0) < 0.0001,
+  { message: 'Sum of shares (worker + cooperative + platform) must equal exactly 1.0 (100%)' }
+);
+
+export const reconciliationQuerySchema = z.object({
+  periodStart: z.string().datetime(),
+  periodEnd: z.string().datetime(),
+});
+
+// ==============================================================================
+// PHASE 4 — AI LABOUR INTELLIGENCE VALIDATION SCHEMAS
+// ==============================================================================
+export const demandForecastQuerySchema = z.object({
+  districtCode: z.string().min(2, 'District code must be at least 2 characters'),
+  category: z.string().min(2, 'Category must be at least 2 characters'),
+  forecastDaysAhead: z.coerce.number().int().min(1).max(90).default(7),
+});
+
+export const workforceAllocationQuerySchema = z.object({
+  cooperativeId: z.string().uuid('Invalid cooperative ID'),
+  targetDate: z.string().datetime(),
+  jobIds: z.array(z.string().uuid()).min(1, 'Must provide at least one job ID'),
+  availableWorkerIds: z.array(z.string().uuid()).min(1, 'Must provide at least one worker ID'),
+});
+
+export const skillGapQuerySchema = z.object({
+  districtCode: z.string().min(2, 'District code must be at least 2 characters'),
+  lookbackDays: z.coerce.number().int().min(7).max(180).default(30),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type GeoPointInput = z.infer<typeof geoPointSchema>;
@@ -127,4 +289,27 @@ export type UpdateCustomerProfileInput = z.infer<typeof updateCustomerProfileSch
 export type CreateServiceRequestInput = z.infer<typeof createServiceRequestSchema>;
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
 export type RateBookingInput = z.infer<typeof rateBookingSchema>;
+
+export type CreateTeamInput = z.infer<typeof createTeamSchema>;
+export type UpdateTeamInput = z.infer<typeof updateTeamSchema>;
+export type AddTeamMemberInput = z.infer<typeof addTeamMemberSchema>;
+export type CreateContractInput = z.infer<typeof createContractSchema>;
+export type UpdateContractStatusInput = z.infer<typeof updateContractStatusSchema>;
+export type CreateProjectInput = z.infer<typeof createProjectSchema>;
+export type CreateLargeJobInput = z.infer<typeof createLargeJobSchema>;
+export type CreateWorkforceRequirementInput = z.infer<typeof createWorkforceRequirementSchema>;
+export type CreateFulfillmentProposalInput = z.infer<typeof createFulfillmentProposalSchema>;
+export type RespondFulfillmentAllocationInput = z.infer<typeof respondFulfillmentAllocationSchema>;
+export type UpdateMembershipStatusInput = z.infer<typeof updateMembershipStatusSchema>;
+
+export type InitiatePaymentInput = z.infer<typeof initiatePaymentSchema>;
+export type VerifyPaymentInput = z.infer<typeof verifyPaymentSchema>;
+export type CreateRefundInput = z.infer<typeof createRefundSchema>;
+export type CreateFinancialPolicyInput = z.infer<typeof createFinancialPolicySchema>;
+export type ReconciliationQueryInput = z.infer<typeof reconciliationQuerySchema>;
+export type DemandForecastQueryInput = z.infer<typeof demandForecastQuerySchema>;
+export type WorkforceAllocationQueryInput = z.infer<typeof workforceAllocationQuerySchema>;
+export type SkillGapQueryInput = z.infer<typeof skillGapQuerySchema>;
+
+
 

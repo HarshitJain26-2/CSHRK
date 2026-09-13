@@ -134,6 +134,22 @@ function WorkerAppContent() {
   const [newSkillCategory, setNewSkillCategory] = useState<string>('Electrical');
   const [newSkillLevel, setNewSkillLevel] = useState<ProficiencyLevel>(ProficiencyLevel.INTERMEDIATE);
 
+  // Earnings & Settlement State
+  const [earningsSummary] = useState({
+    grossEarned: 24800,
+    workerNet: 21080,
+    coopShare: 2480,
+    platformFee: 1240,
+    pendingSettlement: 3720,
+    policyVersion: 'POL-2026-V1',
+    settlements: [
+      { id: 'SETTLE-2026-0092', amount: 3720, status: 'PENDING', date: '2026-09-12', destination: 'SBI •••• 8912' },
+      { id: 'SETTLE-2026-0078', amount: 8580, status: 'PROCESSED', date: '2026-09-05', destination: 'SBI •••• 8912' },
+      { id: 'SETTLE-2026-0041', amount: 12500, status: 'PROCESSED', date: '2026-08-28', destination: 'SBI •••• 8912' },
+    ],
+  });
+  const [isSettlementModalVisible, setIsSettlementModalVisible] = useState<boolean>(false);
+
   // Form states for login/register
   const [email, setEmail] = useState('dev_worker@cshrk.local');
   const [password, setPassword] = useState('DevPass123!');
@@ -608,6 +624,57 @@ function WorkerAppContent() {
                 </View>
               </View>
 
+              {/* Earnings & Settlements Card */}
+              <View style={styles.card}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <Text style={styles.sectionTitle}>EARNINGS & SETTLEMENTS</Text>
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: '#0284c7', backgroundColor: '#e0f2fe', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                    POL-2026-V1 (85/10/5)
+                  </Text>
+                </View>
+
+                <View style={{ backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', borderRadius: 12, padding: 14, marginBottom: 12 }}>
+                  <Text style={{ fontSize: 11, color: '#166534', fontWeight: '600' }}>TOTAL TAKE-HOME EARNINGS</Text>
+                  <Text style={{ fontSize: 24, fontWeight: '800', color: '#15803d', marginTop: 2 }}>
+                    ₹{earningsSummary.workerNet.toLocaleString()}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: '#166534', marginTop: 4 }}>
+                    Gross Billed: ₹{earningsSummary.grossEarned.toLocaleString()} • Pending Payout: ₹{earningsSummary.pendingSettlement.toLocaleString()}
+                  </Text>
+                </View>
+
+                {/* Split Transparency */}
+                <View style={{ backgroundColor: '#f8fafc', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 12 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#334155', marginBottom: 8 }}>
+                    COOPERATIVE SPLIT BREAKDOWN
+                  </Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <Text style={{ fontSize: 11, color: '#64748b' }}>Your Take-Home (85%)</Text>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#0f172a' }}>₹{earningsSummary.workerNet.toLocaleString()}</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <Text style={{ fontSize: 11, color: '#64748b' }}>Cooperative Welfare Fund (10%)</Text>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#0284c7' }}>₹{earningsSummary.coopShare.toLocaleString()}</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 11, color: '#64748b' }}>Platform Operational Fee (5%)</Text>
+                    <Text style={{ fontSize: 11, fontWeight: '600', color: '#64748b' }}>₹{earningsSummary.platformFee.toLocaleString()}</Text>
+                  </View>
+                </View>
+
+                {/* Recent Settlements */}
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderColor: '#f1f5f9' }}
+                  onPress={() => setIsSettlementModalVisible(true)}
+                >
+                  <View>
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: '#0f172a' }}>Settlement History & Status</Text>
+                    <Text style={{ fontSize: 11, color: '#64748b' }}>3 settlements recorded • SBI Bank Account</Text>
+                  </View>
+                  <Text style={{ fontSize: 14, color: '#0284c7', fontWeight: '700' }}>View Details →</Text>
+                </TouchableOpacity>
+              </View>
+
               {/* Quick Links Card */}
               <View style={styles.card}>
                 <Text style={styles.sectionTitle}>QUALIFICATIONS</Text>
@@ -740,6 +807,67 @@ function WorkerAppContent() {
                   <Text style={styles.btnModalSubmitText}>Add Skill</Text>
                 </TouchableOpacity>
               </View>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Settlement History Modal */}
+        <Modal visible={isSettlementModalVisible} transparent animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalCard, { maxHeight: '85%' }]}>
+              <Text style={styles.modalTitle}>Settlement Records & Audits</Text>
+              <Text style={styles.modalSub}>
+                Transparent payouts governed by Cooperative Financial Policy {earningsSummary.policyVersion}
+              </Text>
+
+              <ScrollView style={{ marginVertical: 12 }} showsVerticalScrollIndicator={false}>
+                {earningsSummary.settlements.map((s) => (
+                  <View
+                    key={s.id}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#e2e8f0',
+                      borderRadius: 10,
+                      padding: 12,
+                      marginBottom: 10,
+                      backgroundColor: s.status === 'PROCESSED' ? '#f8fafc' : '#fefce8',
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#0f172a' }}>{s.id}</Text>
+                      <Text
+                        style={{
+                          fontSize: 10,
+                          fontWeight: '700',
+                          paddingHorizontal: 8,
+                          paddingVertical: 2,
+                          borderRadius: 4,
+                          backgroundColor: s.status === 'PROCESSED' ? '#dcfce7' : '#fef08a',
+                          color: s.status === 'PROCESSED' ? '#166534' : '#854d0e',
+                        }}
+                      >
+                        {s.status}
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 16, fontWeight: '800', color: '#0284c7', marginVertical: 2 }}>
+                      ₹{s.amount.toLocaleString()}
+                    </Text>
+                    <Text style={{ fontSize: 11, color: '#64748b' }}>
+                      Dispatched to: {s.destination} • Date: {s.date}
+                    </Text>
+                    <Text style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>
+                      HMAC Signature & Cooperative Treasurer Verified
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+
+              <TouchableOpacity
+                style={[styles.btnModalSubmit, { backgroundColor: '#0284c7' }]}
+                onPress={() => setIsSettlementModalVisible(false)}
+              >
+                <Text style={styles.btnModalSubmitText}>Close</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Modal>

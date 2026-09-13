@@ -72,10 +72,22 @@ export enum BookingStatus {
 // FINANCIAL & AUDIT ENUMS
 // ==============================================================================
 export enum PaymentStatus {
+  INITIATED = 'INITIATED',
+  PENDING = 'PENDING',
+  AUTHORIZED = 'AUTHORIZED',
+  PAID = 'PAID',
+  FAILED = 'FAILED',
+  EXPIRED = 'EXPIRED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED',
+  PARTIALLY_REFUNDED = 'PARTIALLY_REFUNDED',
+  DISPUTED = 'DISPUTED',
+}
+
+export enum RefundStatus {
   PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
-  REFUNDED = 'REFUNDED',
 }
 
 export enum InvoiceStatus {
@@ -91,11 +103,99 @@ export enum SettlementStatus {
   FAILED = 'FAILED',
 }
 
+export enum FinancialPolicyStatus {
+  DRAFT = 'DRAFT',
+  ACTIVE = 'ACTIVE',
+  RETIRED = 'RETIRED',
+}
+
+export enum ReconciliationDiscrepancyType {
+  MATCHED = 'MATCHED',
+  AMOUNT_MISMATCH = 'AMOUNT_MISMATCH',
+  MISSING_IN_PLATFORM = 'MISSING_IN_PLATFORM',
+  MISSING_IN_GATEWAY = 'MISSING_IN_GATEWAY',
+  INCONSISTENT_STATUS = 'INCONSISTENT_STATUS',
+  UNSETTLED_COMPLETED_PAYMENT = 'UNSETTLED_COMPLETED_PAYMENT',
+}
+
+export enum ReconciliationResolutionStatus {
+  UNRESOLVED = 'UNRESOLVED',
+  RESOLVED = 'RESOLVED',
+  FLAGGED_FOR_AUDIT = 'FLAGGED_FOR_AUDIT',
+}
+
 export enum ComplaintStatus {
   OPEN = 'OPEN',
   INVESTIGATING = 'INVESTIGATING',
   RESOLVED = 'RESOLVED',
   DISMISSED = 'DISMISSED',
+}
+
+// ==============================================================================
+// PHASE 3 — COOPERATIVE & FEDERATION ENUMS
+// ==============================================================================
+export enum MembershipStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  INACTIVE = 'INACTIVE',
+}
+
+export enum ContractStatus {
+  DRAFT = 'DRAFT',
+  PROPOSED = 'PROPOSED',
+  ACTIVE = 'ACTIVE',
+  PAUSED = 'PAUSED',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum ProjectStatus {
+  PLANNING = 'PLANNING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  ON_HOLD = 'ON_HOLD',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum JobStatus {
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum RequirementStatus {
+  PENDING = 'PENDING',
+  FULFILLED = 'FULFILLED',
+  PARTIALLY_FULFILLED = 'PARTIALLY_FULFILLED',
+  UNFULFILLED = 'UNFULFILLED',
+}
+
+export enum TeamStatus {
+  ACTIVE = 'ACTIVE',
+  ASSIGNED = 'ASSIGNED',
+  DISBANDED = 'DISBANDED',
+}
+
+export enum TeamMemberRole {
+  LEADER = 'LEADER',
+  MEMBER = 'MEMBER',
+}
+
+export enum FulfillmentPlanStatus {
+  PROPOSED = 'PROPOSED',
+  PENDING_COOPERATIVE_APPROVAL = 'PENDING_COOPERATIVE_APPROVAL',
+  PARTIALLY_APPROVED = 'PARTIALLY_APPROVED',
+  CONFIRMED = 'CONFIRMED',
+  REJECTED = 'REJECTED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum AllocationApprovalStatus {
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
 }
 
 // ==============================================================================
@@ -280,7 +380,10 @@ export interface IBookingCandidate {
   distanceKm: number;
   verifiedSkillName: string;
   proficiencyLevel: ProficiencyLevel;
+  matchScore?: number;
+  explanations?: string[];
 }
+
 
 export interface IBooking {
   id: string;
@@ -307,6 +410,430 @@ export interface IRating {
   targetId: string;
   score: number;
   comment?: string;
+  createdAt: string;
+}
+
+// ==============================================================================
+// PHASE 3 — COOPERATIVE & FEDERATION INTERFACES
+// ==============================================================================
+export interface ICooperativeMembership {
+  id: string;
+  userId: string;
+  cooperativeId: string;
+  workerId?: string;
+  memberId?: string;
+  role: string;
+  status: MembershipStatus;
+  joinedAt: string;
+  leftAt?: string;
+  verifiedBy?: string;
+  verifiedAt?: string;
+  notes?: string;
+  user?: IUser;
+  cooperative?: ICooperative;
+  worker?: IWorker;
+}
+
+export interface IFederationMembership {
+  id: string;
+  userId: string;
+  federationId: string;
+  role: string;
+  status: MembershipStatus;
+  joinedAt: string;
+  leftAt?: string;
+  user?: IUser;
+  federation?: IFederation;
+}
+
+export interface IWorkerTeam {
+  id: string;
+  cooperativeId: string;
+  name: string;
+  description?: string;
+  leaderWorkerId?: string;
+  status: TeamStatus;
+  projectId?: string;
+  members?: ITeamMember[];
+  leader?: IWorker;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ITeamMember {
+  id: string;
+  teamId: string;
+  workerId: string;
+  role: TeamMemberRole;
+  joinedAt: string;
+  worker?: IWorker;
+}
+
+export interface IContract {
+  id: string;
+  contractNumber: string;
+  title: string;
+  clientName: string;
+  clientContact?: string;
+  cooperativeId?: string;
+  federationId?: string;
+  scope: string;
+  startDate: string;
+  endDate: string;
+  status: ContractStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IProject {
+  id: string;
+  contractId?: string;
+  cooperativeId: string;
+  title: string;
+  description: string;
+  location?: GeoPoint;
+  address?: string;
+  startDate: string;
+  endDate: string;
+  status: ProjectStatus;
+  contract?: IContract;
+  teams?: IWorkerTeam[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ILargeJob {
+  id: string;
+  projectId?: string;
+  cooperativeId: string;
+  title: string;
+  organizationName: string;
+  skillId: string;
+  requiredWorkers: number;
+  assignedWorkers: number;
+  startDate: string;
+  endDate: string;
+  location?: GeoPoint;
+  address?: string;
+  status: JobStatus;
+  skill?: ISkill;
+  project?: IProject;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IWorkforceRequirement {
+  id: string;
+  contractId?: string;
+  projectId?: string;
+  skillId: string;
+  quantity: number;
+  fulfilledQuantity: number;
+  locationCity: string;
+  startDate: string;
+  endDate: string;
+  status: RequirementStatus;
+  skill?: ISkill;
+  contract?: IContract;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IFulfillmentPlan {
+  id: string;
+  requirementId: string;
+  federationId: string;
+  title: string;
+  notes?: string;
+  status: FulfillmentPlanStatus;
+  allocations?: IFulfillmentAllocation[];
+  requirement?: IWorkforceRequirement;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IFulfillmentAllocation {
+  id: string;
+  planId: string;
+  cooperativeId: string;
+  allocatedWorkers: number;
+  status: AllocationApprovalStatus;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+  cooperative?: ICooperative;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IWorkforceCapacity {
+  cooperativeId: string;
+  skillId?: string;
+  timeWindow?: {
+    startDate: string;
+    endDate: string;
+  };
+  totalWorkforce: number;
+  activeWorkforce: number;
+  availableWorkers: number;
+  committedWorkforce: number;
+  unavailableWorkers: number;
+  availableCapacity: number;
+  bySkill?: Array<{
+    skillId: string;
+    skillName: string;
+    total: number;
+    available: number;
+    committed: number;
+  }>;
+}
+
+export interface IFederationCapacity {
+  federationId: string;
+  totalCooperatives: number;
+  totalWorkforce: number;
+  activeWorkforce: number;
+  availableWorkers: number;
+  committedWorkforce: number;
+  availableCapacity: number;
+  cooperatives: Array<{
+    cooperativeId: string;
+    cooperativeName: string;
+    district: string;
+    capacity: IWorkforceCapacity;
+  }>;
+}
+
+export interface IAuditLog {
+  id: string;
+  userId?: string;
+  action: string;
+  entityType: string;
+  entityId?: string;
+  ipAddress?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+}
+
+// ==============================================================================
+// PHASE 4 — FINANCIAL & PAYMENT INTERFACES
+// ==============================================================================
+export interface IFinancialPolicy {
+  id: string;
+  version: string;
+  effectiveFrom: string;
+  effectiveTo?: string;
+  workerSharePct: number;
+  cooperativeSharePct: number;
+  platformFeePct: number;
+  status: FinancialPolicyStatus;
+  approvedBy?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ITaxPolicy {
+  id: string;
+  name: string;
+  category?: string;
+  rate: number;
+  isExempt: boolean;
+  description?: string;
+}
+
+export interface IPayment {
+  id: string;
+  bookingId: string;
+  invoiceId?: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  provider: string;
+  intentId?: string;
+  idempotencyKey?: string;
+  paymentMethod?: string;
+  transactionRef?: string;
+  paidAt?: string;
+  failureReason?: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IPaymentWebhookEvent {
+  id: string;
+  provider: string;
+  eventId: string;
+  eventType: string;
+  payload: Record<string, any>;
+  signature?: string;
+  isVerified: boolean;
+  isProcessed: boolean;
+  processedAt?: string;
+  createdAt: string;
+}
+
+export interface IInvoice {
+  id: string;
+  bookingId: string;
+  customerId?: string;
+  cooperativeId?: string;
+  invoiceNumber: string;
+  subtotal: number;
+  discountAmount: number;
+  taxableAmount: number;
+  taxRate: number;
+  taxAmount: number;
+  totalAmount: number;
+  status: InvoiceStatus;
+  paidAt?: string;
+  notes?: string;
+  booking?: IBooking;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IRefund {
+  id: string;
+  paymentId: string;
+  amount: number;
+  reason: string;
+  status: RefundStatus;
+  providerRefundId?: string;
+  createdById?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ISettlement {
+  id: string;
+  cooperativeId: string;
+  workerId: string;
+  bookingId?: string;
+  paymentId?: string;
+  financialPolicyId?: string;
+  policyVersionApplied?: string;
+  grossAmount: number;
+  workerAmount: number;
+  cooperativeFee: number;
+  platformFee: number;
+  status: SettlementStatus;
+  periodStart?: string;
+  periodEnd?: string;
+  paidOutAt?: string;
+  payoutReference?: string;
+  worker?: IWorker;
+  cooperative?: ICooperative;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IReconciliationRecord {
+  id: string;
+  periodStart: string;
+  periodEnd: string;
+  discrepancyType: ReconciliationDiscrepancyType;
+  platformPaymentId?: string;
+  gatewayTransactionId?: string;
+  platformAmount?: number;
+  gatewayAmount?: number;
+  amountDiff?: number;
+  resolutionStatus: ReconciliationResolutionStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ==============================================================================
+// PHASE 4 — AI LABOUR INTELLIGENCE INTERFACES
+// ==============================================================================
+export interface IAIWorkerMatchCandidate {
+  workerId: string;
+  cooperativeId: string;
+  matchScore: number;
+  distanceKm: number;
+  skillFitScore: number;
+  reliabilityScore: number;
+  explanations: string[];
+}
+
+export interface IAIWorkerMatchResponse {
+  serviceRequestId: string;
+  candidates: IAIWorkerMatchCandidate[];
+  algorithmVersion: string;
+  fallbackUsed: boolean;
+}
+
+export interface IDailyDemandPrediction {
+  date: string;
+  expectedRequests: number;
+  confidenceIntervalLower: number;
+  confidenceIntervalUpper: number;
+}
+
+export interface IAIDemandForecast {
+  districtCode: string;
+  category: string;
+  status: 'SUCCESS' | 'INSUFFICIENT_DATA';
+  predictions: IDailyDemandPrediction[];
+  modelVersion: string;
+  evaluationMetrics?: {
+    mae: number;
+    rmse: number;
+    mape: number;
+  };
+  notes?: string;
+}
+
+export interface IAllocationAssignment {
+  jobId: string;
+  assignedWorkerId: string;
+  optimizationMetricScore: number;
+}
+
+export interface IAIWorkforceAllocationRecommendation {
+  cooperativeId: string;
+  assignments: IAllocationAssignment[];
+  unassignedJobs: string[];
+  optimizationEngine: string;
+  requiresCooperativeApproval: boolean;
+  status: 'RECOMMENDED' | 'SUBMITTED_AS_PROPOSAL' | 'APPROVED' | 'REJECTED';
+}
+
+export interface ISkillDeficit {
+  skillName: string;
+  skillCode: string;
+  unfulfilledRequestCount: number;
+  recommendedTrainees: number;
+  severity: 'CRITICAL' | 'MODERATE' | 'ADEQUATE';
+}
+
+export interface IAISkillGapReport {
+  districtCode: string;
+  deficits: ISkillDeficit[];
+  analysisEngine: string;
+  generatedAt: string;
+}
+
+export interface IAIModelMetadata {
+  modelName: string;
+  version: string;
+  featureSchema?: Record<string, any>;
+  trainingDatasetRef?: string;
+  evaluationMetrics?: Record<string, number>;
+  status: 'ACTIVE' | 'DEPRECATED' | 'EVALUATING';
+  createdAt: string;
+}
+
+export interface IAIInferenceLog {
+  id: string;
+  taskType: 'MATCHING' | 'FORECASTING' | 'ALLOCATION' | 'SKILL_GAP';
+  modelVersion: string;
+  inputHash: string;
+  outputSummary?: Record<string, any>;
+  latencyMs: number;
+  fallbackUsed: boolean;
   createdAt: string;
 }
 
