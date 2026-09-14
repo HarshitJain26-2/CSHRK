@@ -33,6 +33,24 @@ export class AuditService {
     return this.auditRepo.save(entry);
   }
 
+  async log(params: {
+    userId?: string;
+    action: string;
+    entityType: string;
+    entityId?: string;
+    metadata?: Record<string, any>;
+    ipAddress?: string;
+  }): Promise<AuditLogEntity> {
+    return this.logAction(
+      params.userId,
+      params.action,
+      params.entityType,
+      params.entityId,
+      params.metadata,
+      params.ipAddress,
+    );
+  }
+
   /**
    * Read-only query for audit log trail.
    */

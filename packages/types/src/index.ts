@@ -126,9 +126,13 @@ export enum ReconciliationResolutionStatus {
 
 export enum ComplaintStatus {
   OPEN = 'OPEN',
+  ACKNOWLEDGED = 'ACKNOWLEDGED',
+  UNDER_REVIEW = 'UNDER_REVIEW',
   INVESTIGATING = 'INVESTIGATING',
   RESOLVED = 'RESOLVED',
+  REJECTED = 'REJECTED',
   DISMISSED = 'DISMISSED',
+  CLOSED = 'CLOSED',
 }
 
 // ==============================================================================
@@ -872,3 +876,382 @@ export interface AuthSession {
   user: IUser;
   tokens: AuthTokens;
 }
+
+// ==============================================================================
+// PHASE 5 — OPERATIONS, TRUST, COMMUNICATIONS & COMPLETION
+// ==============================================================================
+
+// Communication Enums
+export enum ConversationType {
+  BOOKING = 'BOOKING',
+  CUSTOMER_COOPERATIVE = 'CUSTOMER_COOPERATIVE',
+  WORKER_COOPERATIVE = 'WORKER_COOPERATIVE',
+  COOPERATIVE_FEDERATION = 'COOPERATIVE_FEDERATION',
+  DISPUTE_MEDIATION = 'DISPUTE_MEDIATION',
+}
+
+export enum ConversationStatus {
+  ACTIVE = 'ACTIVE',
+  ARCHIVED = 'ARCHIVED',
+  CLOSED = 'CLOSED',
+}
+
+export enum MessageStatus {
+  SENT = 'SENT',
+  DELIVERED = 'DELIVERED',
+  READ = 'READ',
+}
+
+// Notification Enums
+export enum NotificationChannel {
+  IN_APP = 'IN_APP',
+  PUSH = 'PUSH',
+  EMAIL = 'EMAIL',
+  SMS = 'SMS',
+}
+
+export enum NotificationEventType {
+  BOOKING_ACCEPTED = 'BOOKING_ACCEPTED',
+  BOOKING_REJECTED = 'BOOKING_REJECTED',
+  BOOKING_RESCHEDULED = 'BOOKING_RESCHEDULED',
+  SERVICE_STARTED = 'SERVICE_STARTED',
+  SERVICE_COMPLETED = 'SERVICE_COMPLETED',
+  INVOICE_READY = 'INVOICE_READY',
+  PAYMENT_VERIFIED = 'PAYMENT_VERIFIED',
+  SETTLEMENT_PROCESSED = 'SETTLEMENT_PROCESSED',
+  DISPUTE_OPENED = 'DISPUTE_OPENED',
+  DISPUTE_UPDATED = 'DISPUTE_UPDATED',
+  SOS_ALERT_TRIGGERED = 'SOS_ALERT_TRIGGERED',
+  ADMIN_ACTION = 'ADMIN_ACTION',
+  COOP_ASSIGNMENT = 'COOP_ASSIGNMENT',
+  CERTIFICATION_EXPIRY_WARNING = 'CERTIFICATION_EXPIRY_WARNING',
+  MESSAGE_RECEIVED = 'MESSAGE_RECEIVED',
+  SUPPORT_REQUEST_UPDATED = 'SUPPORT_REQUEST_UPDATED',
+}
+
+export enum NotificationPriority {
+  LOW = 'LOW',
+  NORMAL = 'NORMAL',
+  HIGH = 'HIGH',
+  URGENT = 'URGENT',
+}
+
+// Trust & Safety Enums
+export enum DisputeStatus {
+  OPEN = 'OPEN',
+  UNDER_REVIEW = 'UNDER_REVIEW',
+  EVIDENCE_REQUESTED = 'EVIDENCE_REQUESTED',
+  MEDIATION = 'MEDIATION',
+  DECISION = 'DECISION',
+  RESOLVED = 'RESOLVED',
+  ESCALATED = 'ESCALATED',
+}
+
+export enum DisputeResolution {
+  FULL_REFUND_CUSTOMER = 'FULL_REFUND_CUSTOMER',
+  RELEASE_TO_WORKER = 'RELEASE_TO_WORKER',
+  PARTIAL_SETTLEMENT = 'PARTIAL_SETTLEMENT',
+  DISMISSED = 'DISMISSED',
+}
+
+export enum AccountRestrictionType {
+  WARNING = 'WARNING',
+  RESTRICTED = 'RESTRICTED',
+  SUSPENDED = 'SUSPENDED',
+  DEACTIVATED = 'DEACTIVATED',
+}
+
+export enum ModerationActionType {
+  FLAG_CONTENT = 'FLAG_CONTENT',
+  SUSPEND_USER = 'SUSPEND_USER',
+  RESTRICT_USER = 'RESTRICT_USER',
+  REINSTATE_USER = 'REINSTATE_USER',
+  DISMISS_REPORT = 'DISMISS_REPORT',
+}
+
+// Emergency / SOS Enums
+export enum SosCategory {
+  PHYSICAL_SAFETY = 'PHYSICAL_SAFETY',
+  MEDICAL_EMERGENCY = 'MEDICAL_EMERGENCY',
+  HARASSMENT = 'HARASSMENT',
+  ACCIDENT = 'ACCIDENT',
+  HAZARDOUS_CONDITION = 'HAZARDOUS_CONDITION',
+  OTHER = 'OTHER',
+}
+
+export enum SosPriority {
+  HIGH = 'HIGH',
+  CRITICAL = 'CRITICAL',
+}
+
+export enum SosStatus {
+  TRIGGERED = 'TRIGGERED',
+  ACKNOWLEDGED = 'ACKNOWLEDGED',
+  RESPONDER_ASSIGNED = 'RESPONDER_ASSIGNED',
+  RESOLVED = 'RESOLVED',
+  FALSE_ALARM = 'FALSE_ALARM',
+}
+
+// Worker Support / Welfare Enums
+export enum SupportRequestCategory {
+  SAFETY_ISSUE = 'SAFETY_ISSUE',
+  WORKPLACE_INCIDENT = 'WORKPLACE_INCIDENT',
+  WELFARE_ASSISTANCE = 'WELFARE_ASSISTANCE',
+  TRAINING_SUPPORT = 'TRAINING_SUPPORT',
+  DOCUMENTATION_SUPPORT = 'DOCUMENTATION_SUPPORT',
+}
+
+export enum SupportRequestStatus {
+  SUBMITTED = 'SUBMITTED',
+  REVIEW = 'REVIEW',
+  ACTION = 'ACTION',
+  RESOLVED = 'RESOLVED',
+  CLOSED = 'CLOSED',
+}
+
+// Offline Operations Enum
+export enum OfflineSyncOperationType {
+  JOB_STATUS_UPDATE = 'JOB_STATUS_UPDATE',
+  SEND_MESSAGE = 'SEND_MESSAGE',
+  OFFLINE_ACKNOWLEDGE = 'OFFLINE_ACKNOWLEDGE',
+  SUPPORT_REQUEST = 'SUPPORT_REQUEST',
+}
+
+// Attachments & Storage Interfaces
+export interface IAttachmentMetadata {
+  id: string;
+  filename: string;
+  mimeType: 'image/jpeg' | 'image/png' | 'image/webp' | 'application/pdf';
+  fileSizeBytes: number;
+  url: string;
+  sha256Checksum: string;
+  uploadedAt: string;
+}
+
+// Communication Interfaces
+export interface IConversation {
+  id: string;
+  type: ConversationType;
+  status: ConversationStatus;
+  customerId?: string;
+  workerId?: string;
+  cooperativeId?: string;
+  federationId?: string;
+  bookingId?: string;
+  projectId?: string;
+  disputeId?: string;
+  title?: string;
+  metadata?: Record<string, any>;
+  lastMessageAt?: string;
+  closedAt?: string;
+  customer?: ICustomer;
+  worker?: IWorker;
+  cooperative?: ICooperative;
+  booking?: IBooking;
+  messages?: IMessage[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  status: MessageStatus;
+  clientMessageId?: string;
+  readAt?: string;
+  attachments?: IAttachmentMetadata[];
+  sender?: IUser;
+  conversation?: IConversation;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Notification Interfaces
+export interface INotification {
+  id: string;
+  recipientId: string;
+  title: string;
+  message: string;
+  channel: NotificationChannel;
+  eventType: NotificationEventType;
+  priority: NotificationPriority;
+  isRead: boolean;
+  readAt?: string;
+  metadata?: Record<string, any>;
+  recipient?: IUser;
+  createdAt: string;
+}
+
+export interface IPushToken {
+  id: string;
+  userId: string;
+  token: string;
+  platform: 'IOS' | 'ANDROID' | 'WEB';
+  deviceId?: string;
+  isActive: boolean;
+  lastUsedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface INotificationPreference {
+  id: string;
+  userId: string;
+  channel: NotificationChannel;
+  eventType: NotificationEventType;
+  isEnabled: boolean;
+  updatedAt: string;
+}
+
+// Trust & Safety Interfaces
+export interface IComplaint {
+  id: string;
+  bookingId: string;
+  raisedById: string;
+  workerId?: string;
+  customerId?: string;
+  cooperativeId?: string;
+  category: string;
+  description: string;
+  status: ComplaintStatus;
+  resolutionNotes?: string;
+  resolvedById?: string;
+  resolvedAt?: string;
+  booking?: IBooking;
+  raisedBy?: IUser;
+  cooperative?: ICooperative;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IDispute {
+  id: string;
+  bookingId: string;
+  initiatorId: string;
+  respondentId?: string;
+  cooperativeId?: string;
+  status: DisputeStatus;
+  reason: string;
+  disputedAmount: number;
+  resolution?: DisputeResolution;
+  resolutionNotes?: string;
+  resolvedById?: string;
+  resolvedAt?: string;
+  booking?: IBooking;
+  initiator?: IUser;
+  respondent?: IUser;
+  cooperative?: ICooperative;
+  evidences?: IDisputeEvidence[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IDisputeEvidence {
+  id: string;
+  disputeId: string;
+  submittedById: string;
+  title: string;
+  description?: string;
+  attachment: IAttachmentMetadata;
+  submittedBy?: IUser;
+  createdAt: string;
+}
+
+export interface IAccountRestriction {
+  id: string;
+  userId: string;
+  restrictionType: AccountRestrictionType;
+  reason: string;
+  issuedById: string;
+  expiresAt?: string;
+  isActive: boolean;
+  revokedAt?: string;
+  revocationReason?: string;
+  user?: IUser;
+  issuedBy?: IUser;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Emergency / SOS Interfaces
+export interface ISosAlert {
+  id: string;
+  requesterId: string;
+  bookingId?: string;
+  cooperativeId?: string;
+  category: SosCategory;
+  priority: SosPriority;
+  status: SosStatus;
+  location: GeoPoint;
+  addressText?: string;
+  description?: string;
+  assignedResponderId?: string;
+  resolutionNotes?: string;
+  isLocationRedacted: boolean;
+  resolvedAt?: string;
+  requester?: IUser;
+  booking?: IBooking;
+  cooperative?: ICooperative;
+  assignedResponder?: IUser;
+  updates?: ISosUpdate[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ISosUpdate {
+  id: string;
+  sosAlertId: string;
+  authorId: string;
+  note: string;
+  previousStatus?: SosStatus;
+  newStatus?: SosStatus;
+  location?: GeoPoint;
+  author?: IUser;
+  createdAt: string;
+}
+
+// Worker Support / Welfare Interfaces
+export interface IWorkerSupportRequest {
+  id: string;
+  workerId: string;
+  cooperativeId: string;
+  category: SupportRequestCategory;
+  status: SupportRequestStatus;
+  subject: string;
+  description: string;
+  actionTaken?: string;
+  reviewedById?: string;
+  resolvedAt?: string;
+  worker?: IWorker;
+  cooperative?: ICooperative;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Offline Sync Interfaces
+export interface IOfflineSyncQueueItem {
+  operationId: string;
+  operationType: OfflineSyncOperationType;
+  idempotencyKey: string;
+  clientTimestamp: string;
+  payload: Record<string, any>;
+}
+
+export interface IOfflineSyncResult {
+  operationId: string;
+  status: 'APPLIED' | 'DUPLICATE_IGNORED' | 'CONFLICT_RESOLVED' | 'REJECTED';
+  message: string;
+  serverEntityId?: string;
+  serverTimestamp: string;
+  conflictDetails?: Record<string, any>;
+}
+
+export interface IOfflineSyncResponse {
+  totalProcessed: number;
+  appliedCount: number;
+  conflictCount: number;
+  results: IOfflineSyncResult[];
+}
+

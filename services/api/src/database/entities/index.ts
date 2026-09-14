@@ -32,4 +32,15 @@ export * from './refund.entity';
 export * from './reconciliation-record.entity';
 export * from './ai-inference-log.entity';
 export * from './ai-model-version.entity';
+export * from './conversation.entity';
+export * from './message.entity';
+export * from './notification.entity';
+export * from './push-token.entity';
+export * from './notification-preference.entity';
+export * from './dispute.entity';
+export * from './dispute-evidence.entity';
+export * from './account-restriction.entity';
+export * from './sos-alert.entity';
+export * from './sos-update.entity';
+export * from './worker-support-request.entity';
 

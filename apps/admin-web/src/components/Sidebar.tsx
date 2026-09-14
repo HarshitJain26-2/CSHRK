@@ -86,6 +86,24 @@ export const Sidebar: React.FC = () => {
       matchViews: ['ai-intelligence'],
     },
     {
+      id: 'trust-safety' as ViewType,
+      label: 'Trust & Safety',
+      icon: 'policy',
+      matchViews: ['trust-safety'],
+    },
+    {
+      id: 'emergency-monitoring' as ViewType,
+      label: 'Emergency & SOS',
+      icon: 'e911_emergency',
+      matchViews: ['emergency-monitoring'],
+    },
+    {
+      id: 'welfare-operations' as ViewType,
+      label: 'Worker Welfare',
+      icon: 'health_and_safety',
+      matchViews: ['welfare-operations'],
+    },
+    {
       id: 'audit-log' as ViewType,
       label: 'Audit & Governance',
       icon: 'verified_user',
