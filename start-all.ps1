@@ -6,7 +6,7 @@ param (
 )
 
 Write-Host "================================================================" -ForegroundColor Cyan
-Write-Host "  CSHRK — Cooperative Labour & Service Marketplace Launcher" -ForegroundColor Cyan
+Write-Host "  CSHRK - Cooperative Labour and Service Marketplace Launcher" -ForegroundColor Cyan
 Write-Host "================================================================" -ForegroundColor Cyan
 
 $argsList = @("scripts/start-all.js")
@@ -22,3 +22,4 @@ if ($Worker) {
 }
 
 node @argsList
+
